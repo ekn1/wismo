@@ -1,0 +1,22 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SCENTS logo">
+  <defs>
+    <linearGradient id="scGrad" x1="20" y1="14" x2="100" y2="106" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B2E4F"/>
+      <stop offset="1" stop-color="#0E5A8A"/>
+    </linearGradient>
+  </defs>
+  <!-- outer signal ring -->
+  <circle cx="60" cy="60" r="46" stroke="#C99A3B" stroke-width="3" stroke-opacity="0.35"/>
+  <circle cx="60" cy="60" r="34" stroke="#C99A3B" stroke-width="2.5" stroke-opacity="0.6"/>
+  <!-- converging sense beams into a tracked node -->
+  <path d="M60 14 L60 44" stroke="#C99A3B" stroke-width="3" stroke-linecap="round"/>
+  <path d="M22 42 L48 54" stroke="#C99A3B" stroke-width="3" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M98 42 L72 54" stroke="#C99A3B" stroke-width="3" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M30 92 L52 70" stroke="#C99A3B" stroke-width="3" stroke-linecap="round" stroke-opacity="0.55"/>
+  <path d="M90 92 L68 70" stroke="#C99A3B" stroke-width="3" stroke-linecap="round" stroke-opacity="0.55"/>
+  <!-- core cognitive node -->
+  <circle cx="60" cy="60" r="20" fill="url(#scGrad)"/>
+  <circle cx="60" cy="60" r="8" fill="#C99A3B"/>
+  <!-- orbiting tracked point -->
+  <circle cx="60" cy="14" r="4" fill="#C99A3B"/>
+</svg>

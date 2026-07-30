@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WISMO v1.0 — Platform Preview</title>
+<style>
+  :root{
+    --navy:#0A1A2F; --navy-2:#0B2E4F; --panel:#0E1B2E; --panel-2:#0F2236; --panel-3:#11283f;
+    --teal:#0E7490; --teal-dk:#0B5563; --teal-lt:#19A0BF;
+    --amber:#E8B85D; --amber-dk:#C99A3B;
+    --ink:#EAF1F7; --muted:#8FA3B8; --muted-2:#6B7E93;
+    --line:#1C2E44; --line-2:#27425E;
+    --green:#28C840; --green-dk:#15803D; --green-lt:rgba(40,200,64,.16);
+    --red:#FF5F57; --red-dk:#B91C1C; --red-lt:rgba(255,95,87,.16);
+    --orange:#F59E0B; --orange-lt:rgba(245,158,11,.16);
+    --blue:#3B82F6; --blue-lt:rgba(59,130,246,.16);
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Sego UI",Roboto,Helvetica,Arial,sans-serif;
+    --r:10px; --r-lg:14px; --r-xl:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--navy);color:var(--ink);line-height:1.5;
+    -webkit-font-smoothing:antialiased;min-height:100vh}
+  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;
+    background:
+      radial-gradient(900px 520px at 88% -8%,rgba(14,116,144,.28) 0%,rgba(10,26,47,0) 60%),
+      radial-gradient(700px 420px at -4% 4%,rgba(201,154,59,.10) 0%,rgba(10,26,47,0) 55%),
+      linear-gradient(var(--line) 1px,transparent 1px) 0 0/44px 44px,
+      linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/44px 44px;
+    mask-image:radial-gradient(120% 90% at 50% 0%,#000 60%,transparent 100%)}
+  .shell{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:26px 24px 60px}
+
+  /* topbar */
+  .top{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:11px}
+  .brand svg{width:36px;height:36px}
+  .brand .t{font-size:18px;font-weight:700;letter-spacing:.01em}
+  .brand .t b{color:var(--teal-lt)}
+  .ekn{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.08em;
+    color:var(--teal-lt);background:rgba(14,116,144,.16);border:1px solid var(--line-2);
+    padding:4px 10px;border-radius:20px}
+  .top .spacer{flex:1}
+  .live-pill{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;
+    color:var(--green);background:var(--green-lt);border:1px solid rgba(40,200,64,.3);
+    padding:6px 12px;border-radius:20px}
+  .live-pill .dot{width:8px;height:8px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 0 0 rgba(40,200,64,.6);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(40,200,64,.5)}70%{box-shadow:0 0 0 8px rgba(40,200,64,0)}100%{box-shadow:0 0 0 0 rgba(40,200,64,0)}}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .sub b{color:var(--ink);font-weight:600}
+
+  /* console */
+  .console{display:grid;grid-template-columns:200px 1fr;background:var(--panel);
+    border:1px solid var(--line-2);border-radius:var(--r-xl);overflow:hidden;
+    box-shadow:0 30px 70px rgba(0,0,0,.45)}
+  .side{background:var(--panel-2);border-right:1px solid var(--line-2);padding:18px 0;display:flex;flex-direction:column}
+  .side .hd{padding:0 18px 14px;font-size:12px;font-weight:700;color:var(--navy-2);
+    letter-spacing:.04em;color:var(--teal-lt)}
+  .nav{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted);
+    padding:11px 18px;cursor:pointer;border-left:3px solid transparent;transition:.15s}
+  .nav svg{flex:none;opacity:.6}
+  .nav:hover{background:var(--panel-3);color:var(--ink)}
+  .nav.active{background:var(--panel-3);color:var(--ink);border-left-color:var(--teal);font-weight:600}
+  .nav.active svg{opacity:1;stroke:var(--teal-lt)}
+  .side .bottom{margin-top:auto;padding:14px 18px;border-top:1px solid var(--line-2);
+    font-size:11px;color:var(--muted-2);font-family:var(--mono)}
+  .main{display:flex;flex-direction:column;min-width:0}
+  .bar{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line-2)}
+  .bar .ttl{font-size:14.5px;font-weight:600}
+  .bar .tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted-2)}
+  .content{padding:20px;min-height:420px}
+
+  .view{display:none}
+  .view.active{display:block;animation:fade .3s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .tab{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--panel-2);
+    border:1px solid var(--line-2);padding:8px 14px;border-radius:20px;cursor:pointer;transition:.15s}
+  .tab:hover{color:var(--ink)}
+  .tab.active{background:linear-gradient(135deg,var(--teal),var(--teal-dk));color:#fff;border-color:transparent}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .kpi{background:linear-gradient(180deg,var(--panel-2),var(--panel-3));border:1px solid var(--line-2);
+    border-radius:var(--r-lg);padding:15px}
+  .kpi .l{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2)}
+  .kpi .v{font-size:23px;font-weight:800;margin-top:6px;letter-spacing:-.02em}
+  .kpi .s{font-size:11px;font-weight:600;margin-top:4px;color:var(--muted)}
+  .kpi .s.up{color:var(--green)} .kpi .s.dn{color:var(--red)} .kpi .s.nu{color:var(--muted-2)}
+
+  .card{background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:18px;margin-bottom:16px}
+  .card h3{font-size:14px;margin:0 0 14px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.full{grid-column:1/-1}
+  .field label{font-size:11px;color:var(--muted-2);font-family:var(--mono);letter-spacing:.04em;text-transform:uppercase}
+  input,select{width:100%;background:var(--navy);border:1px solid var(--line-2);border-radius:var(--r);
+    padding:10px 11px;font-size:13px;color:var(--ink);font-family:inherit;outline:none;transition:.15s}
+  input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,116,144,.18)}
+  .btn{background:linear-gradient(135deg,var(--teal),var(--teal-dk));color:#fff;border:0;border-radius:var(--r);
+    padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit}
+  .btn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:var(--panel-3);border:1px solid var(--line-2);color:var(--ink);font-weight:600}
+  .btn.ghost:hover{border-color:var(--teal);color:var(--teal-lt)}
+  .btn.danger{background:var(--panel-3);border:1px solid var(--red-lt);color:var(--red)}
+  .btn.danger:hover{background:var(--red-lt)}
+  .field .btn{height:40px;align-self:flex-end}
+
+  .tw{overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--muted-2);padding:0 12px 10px 0;border-bottom:1px solid var(--line-2)}
+  td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);color:var(--ink);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .oid{font-family:var(--mono);font-size:10.5px;color:var(--muted-2)}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;
+    padding:3px 9px;border-radius:7px}
+  .b-teal{background:rgba(14,116,144,.2);color:var(--teal-lt)}
+  .b-blue{background:var(--blue-lt);color:#93B4FB}
+  .b-orange{background:var(--orange-lt);color:var(--orange)}
+  .b-green{background:var(--green-lt);color:var(--green)}
+  .b-red{background:var(--red-lt);color:var(--red)}
+  .b-gray{background:rgba(120,140,170,.14);color:var(--muted)}
+  .empty td{color:var(--muted-2);padding:14px 0;text-align:center;font-style:italic}
+
+  /* mobile frame (rider / tracking) */
+  .phone{width:300px;max-width:100%;margin:0 auto;background:var(--navy);border:1px solid var(--line-2);
+    border-radius:26px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+  .pbar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;
+    background:var(--panel-2);border-bottom:1px solid var(--line-2);font-size:10px;font-family:var(--mono)}
+  .online{display:flex;align-items:center;gap:6px;color:var(--green);font-weight:700}
+  .online .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.8s infinite}
+  .map{height:150px;position:relative;overflow:hidden;
+    background:radial-gradient(120px 80px at 30% 30%,rgba(14,116,144,.25),transparent),
+               linear-gradient(135deg,#0c2030,#0a1a28)}
+  .road{position:absolute;background:rgba(120,150,180,.18);border-radius:2px}
+  .rpin{position:absolute;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+  .maplbl{position:absolute;bottom:8px;right:10px;font-size:9px;font-weight:600;
+    background:rgba(10,26,47,.85);padding:2px 7px;border-radius:5px;color:var(--muted)}
+  .ocard{border:1px solid var(--line-2);border-radius:var(--r);margin:12px;padding:13px;background:var(--panel-2)}
+  .ocard .orr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .oid2{font-family:var(--mono);font-size:11px;color:var(--teal-lt);font-weight:700}
+  .addr{font-size:11.5px;color:var(--muted);margin-bottom:3px}
+  .addr b{color:var(--ink)}
+  .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+  .bp{background:linear-gradient(135deg,var(--teal),var(--teal-dk));color:#fff;border:0;border-radius:var(--r);
+    padding:9px;font-size:11.5px;font-weight:700;cursor:pointer;text-align:center}
+  .bp:hover{filter:brightness(1.08)}
+  .bo{background:var(--panel-3);border:1px solid var(--line-2);color:var(--ink);border-radius:var(--r);
+    padding:9px;font-size:11.5px;font-weight:600;cursor:pointer;text-align:center}
+  .bo:hover{border-color:var(--amber);color:var(--amber)}
+  .queue-h{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--muted-2);padding:6px 12px 4px}
+  .qi{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
+    border-top:1px solid var(--line);font-size:11.5px}
+  .qi .qid{font-family:var(--mono);font-size:10px;color:var(--muted-2)}
+  .qi .qv{font-weight:700;color:var(--teal-lt)}
+  .bnav{display:flex;border-top:1px solid var(--line-2)}
+  .ntab{flex:1;text-align:center;padding:11px 4px;font-size:10px;font-weight:600;color:var(--muted-2)}
+  .ntab.active{color:var(--teal-lt);border-top:2px solid var(--teal)}
+
+  /* tracking */
+  .thdr{background:linear-gradient(135deg,var(--navy-2),var(--teal-dk));color:#fff;padding:14px 16px;
+    display:flex;justify-content:space-between;align-items:center}
+  .thdr .ref{font-size:10px;opacity:.75;margin-top:2px;font-family:var(--mono)}
+  .etabadge{background:var(--amber);color:var(--navy);font-size:11px;font-weight:800;padding:3px 10px;border-radius:7px}
+  .tl{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+  .tli{display:flex;align-items:flex-start;gap:12px}
+  .td{width:20px;height:20px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-size:9px;font-weight:800;margin-top:1px}
+  .td.done{background:var(--green);color:#fff}
+  .td.active{background:var(--teal);color:#fff;box-shadow:0 0 0 4px rgba(14,116,144,.25)}
+  .td.pending{background:var(--line-2);color:var(--muted-2)}
+  .tll{font-size:12.5px;font-weight:600}
+  .tls{font-size:11px;color:var(--muted-2)}
+  .tlt{margin-left:auto;font-size:11px;color:var(--muted-2);font-family:var(--mono);white-space:nowrap}
+
+  /* whatsapp */
+  .wa-hdr{background:#075E54;color:#fff;padding:11px 14px;display:flex;align-items:center;gap:10px}
+  .wa-av{width:30px;height:30px;border-radius:50%;background:#128C7E;display:grid;place-items:center;
+    font-size:12px;font-weight:700}
+  .wa-name{font-size:12.5px;font-weight:700}
+  .wa-st{font-size:10px;opacity:.75}
+  .wa-body{background:#ECE5DD;padding:10px;min-height:120px}
+  .wa-msg{max-width:82%;padding:8px 11px;border-radius:9px;font-size:12px;line-height:1.5;margin:7px 10px;position:relative}
+  .wa-recv{background:#fff;border-radius:0 9px 9px 9px;color:#111}
+  .wa-sent{background:#DCF8C6;border-radius:9px 0 9px 9px;margin-left:auto;color:#111}
+  .wa-time{font-size:9px;color:#8696a0;text-align:right;margin-top:3px}
+  .wa-link{color:#075E54;font-weight:700}
+
+  .toast{position:fixed;bottom:22px;right:22px;background:var(--navy-2);color:#fff;padding:11px 16px;
+    border-radius:var(--r);font-size:12.5px;box-shadow:0 12px 30px rgba(0,0,0,.5);z-index:80;border:1px solid var(--line-2)}
+
+  @media(max-width:760px){.console{grid-template-columns:1fr}.side{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line-2)}.side .hd,.side .bottom{display:none}.nav{border-left:0;border-bottom:3px solid transparent;white-space:nowrap}.nav.active{border-left:0;border-bottom-color:var(--teal)}.kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body><div class="bg"></div>
+<div class="shell">
+  <div class="top">
+    <div class="brand">
+      <svg viewBox="0 0 120 120" aria-label="WISMO"><defs><linearGradient id="lg" x1="18" y1="18" x2="102" y2="102" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0B5563"/><stop offset="1" stop-color="#0E7490"/></linearGradient></defs>
+        <path d="M20 96 C40 60 56 100 74 56 S96 26 100 24" stroke="#0E7490" stroke-width="3" stroke-opacity=".35" stroke-linecap="round" fill="none"/>
+        <path d="M100 24 C112 24 112 8 100 8 C88 8 88 24 100 24 Z" fill="url(#lg)"/>
+        <circle cx="100" cy="18" r="4" fill="#E8B85D"/>
+        <circle cx="20" cy="96" r="9" fill="url(#lg)"/><circle cx="20" cy="96" r="3.5" fill="#E8B85D"/>
+        <circle cx="47" cy="78" r="2.5" fill="#0E7490" fill-opacity=".5"/><circle cx="74" cy="56" r="2.5" fill="#0E7490" fill-opacity=".5"/></svg>
+      <span class="t">WI<b>S</b>MO v1.0</span>
+    </div>
+    <span class="ekn">EKN Consulting International Ltd</span>
+    <div class="spacer"></div>
+    <span class="live-pill"><span class="dot"></span> API live</span>
+  </div>
+  <p class="sub"><b>Platform Preview</b> — merchant operations console: orders, dispatch, live rider tracking, customer WhatsApp, and behavioral intake.</p>
+
+  <div class="console">
+    <aside class="side">
+      <div class="hd">Zawadi Fashions</div>
+      <div class="nav active" data-view="orders">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Orders
+      </div>
+      <div class="nav" data-view="rider">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 13l2-5h6l3 5M14 13h4a2 2 0 002 2 2 2 0 01-2 2M5 17a2 2 0 104 0 2 2 0 00-4 0zM17 17a2 2 0 104 0 2 2 0 00-4 0z"/></svg>Rider
+      </div>
+      <div class="nav" data-view="tracking">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>Tracking
+      </div>
+      <div class="nav" data-view="intake">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Intake
+      </div>
+      <div class="bottom">● gateway 3000<br>● order 3001 · geo 3002<br>● notify 3003 · pixel 3007</div>
+    </aside>
+
+    <div class="main">
+      <div class="bar">
+        <span class="ttl" id="viewTitle">Orders</span>
+        <span class="tag" id="alertText">Order management and dispatch.</span>
+      </div>
+      <div class="content">
+
+        <!-- ORDERS -->
+        <section id="view-orders" class="view active">
+          <div class="tabs">
+            <div class="tab active" data-panel="orders">Orders</div>
+            <div class="tab" data-panel="routes">Routes</div>
+            <div class="tab" data-panel="merchants">Merchants</div>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><div class="l">Today's orders</div><div class="v" id="kpiOrders">0</div><div class="s nu">Live</div></div>
+            <div class="kpi"><div class="l">Delivered</div><div class="v" id="kpiDelivered">0</div><div class="s up">Success</div></div>
+            <div class="kpi"><div class="l">Revenue</div><div class="v" id="kpiRevenue">KES 0</div><div class="s up">Today</div></div>
+            <div class="kpi"><div class="l">Avg ETA</div><div class="v" id="kpiEta">--</div><div class="s nu">Updated</div></div>
+          </div>
+          <div class="card" id="panel-orders">
+            <h3>New order</h3>
+            <div class="row">
+              <div class="field"><label>Order ID</label><input id="orderId" placeholder="WISMO-YYYYMMDD-NNN"></div>
+              <div class="field"><label>Customer</label><input id="orderCustomer" placeholder="Full name"></div>
+              <div class="field"><label>Zone</label><input id="orderZone" placeholder="Westlands"></div>
+              <div class="field"><label>Value (KES)</label><input id="orderValue" inputmode="numeric" placeholder="2,400"></div>
+              <div class="field"><label>Status</label><select id="orderStatus"><option>Confirmed</option><option>Assigned</option><option>Picked up</option><option>In transit</option><option>Delivered</option><option>Failed</option></select></div>
+              <div class="field"><button id="createOrder" class="btn">Create order</button></div>
+            </div>
+            <div class="tw" style="margin-top:14px"><table><thead><tr><th>Order</th><th>Customer</th><th>Zone</th><th>Status</th><th>ETA</th><th style="text-align:right">Value</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
+          </div>
+          <div class="card" id="panel-routes" style="display:none">
+            <h3>Route status update</h3>
+            <div class="row">
+              <div class="field"><label>Order ID</label><input id="routeOrderId" placeholder="WISMO-250512-001"></div>
+              <div class="field"><label>Status</label><select id="routeStatus"><option>Confirmed</option><option>Assigned</option><option>Picked up</option><option>Delivered</option><option>Failed</option></select></div>
+              <div class="field"><label>Zone</label><input id="routeZone" placeholder="Westlands"></div>
+              <div class="field"><button id="routeUpdate" class="btn">Update status</button></div>
+            </div>
+            <div class="tw" style="margin-top:14px"><table><thead><tr><th>Order</th><th>Customer</th><th>Zone</th><th>Status</th><th>ETA</th><th style="text-align:right">Value</th></tr></thead><tbody id="routeBody"></tbody></table></div>
+          </div>
+          <div class="card" id="panel-merchants" style="display:none">
+            <h3>Merchants</h3>
+            <div class="row">
+              <div class="field"><label>Name</label><input id="mName" placeholder="Business name"></div>
+              <div class="field"><label>Contact</label><input id="mContact" placeholder="Phone or email"></div>
+              <div class="field"><label>Zone</label><input id="mZone" placeholder="Westlands"></div>
+              <div class="field"><button id="mCreate" class="btn">Add merchant</button></div>
+            </div>
+            <div class="tw" style="margin-top:14px"><table><thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Zone</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody id="merchantBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- RIDER -->
+        <section id="view-rider" class="view">
+          <div class="phone">
+            <div class="pbar"><span class="online"><span class="dot"></span> Online</span><span id="activeOrdersLabel">0 active orders</span><span id="earningsLabel" style="color:var(--amber);font-weight:700">KES 0 today</span></div>
+            <div class="map">
+              <div class="road" style="left:0;right:0;top:58px;height:7px;opacity:.5"></div>
+              <div class="road" style="left:0;right:0;top:104px;height:5px;opacity:.3"></div>
+              <div class="road" style="left:92px;top:0;bottom:0;width:6px;opacity:.4"></div>
+              <div class="road" style="left:170px;top:0;bottom:0;width:5px;opacity:.3"></div>
+              <div class="rpin" style="top:42px;left:74px"><svg width="22" height="28" viewBox="0 0 22 28"><path d="M11 0C5 0 0 5 0 11c0 8 11 17 11 17s11-9 11-17C22 5 17 0 11 0z" fill="#0E7490"/><circle cx="11" cy="11" r="5" fill="#E8B85D"/></svg></div>
+              <div class="rpin" style="top:70px;right:54px"><svg width="20" height="26" viewBox="0 0 20 26"><path d="M10 0C4.5 0 0 4.5 0 10c0 7 10 16 10 16s10-9 10-16C20 4.5 15.5 0 10 0z" fill="#FF5F57"/><circle cx="10" cy="10" r="4" fill="#fff"/></svg></div>
+              <span class="maplbl">Delphi route · stops optimized</span>
+            </div>
+            <div class="ocard">
+              <div class="orr"><span class="oid2" id="riderOrderId">--</span><span class="badge b-teal">Pickup next</span></div>
+              <div class="addr"><span style="color:var(--teal-lt)">●</span> <span id="riderPickup">No active pickup</span></div>
+              <div class="addr">→ <b id="riderDrop">--</b> · KES <b id="riderValue">0</b></div>
+              <div class="btnrow"><div class="bp" id="btnPickedUp">✓ Picked up</div><div class="bo" id="btnReport">Report issue</div></div>
+            </div>
+            <div class="queue-h">Next in queue</div>
+            <div id="queueList"></div>
+            <div class="bnav"><div class="ntab active">Home</div><div class="ntab">Route</div><div class="ntab">Report</div></div>
+          </div>
+        </section>
+
+        <!-- TRACKING -->
+        <section id="view-tracking" class="view">
+          <div class="phone">
+            <div class="pbar"><span class="online"><span class="dot"></span> Live</span><span id="trackRef2">--</span></div>
+            <div class="thdr"><div><span style="font-size:13px;font-weight:700">Track Your Order</span><div class="ref" id="trackRef">--</div></div><span class="etabadge" id="trackEta">--</span></div>
+            <div class="map">
+              <div class="road" style="left:0;right:0;top:54px;height:7px;background:rgba(255,255,255,.5)"></div>
+              <div class="road" style="left:108px;top:0;bottom:0;width:6px;background:rgba(255,255,255,.4)"></div>
+              <div class="rpin" style="top:30px;left:74px"><svg width="20" height="25" viewBox="0 0 20 25"><path d="M10 0C4.5 0 0 4.5 0 10c0 7 10 15 10 15s10-8 10-15C20 4.5 15.5 0 10 0z" fill="#0E7490"/><circle cx="10" cy="10" r="4" fill="#E8B85D"/></svg></div>
+              <div class="rpin" style="top:54px;right:62px"><svg width="18" height="22" viewBox="0 0 18 22"><path d="M9 0C4 0 0 4 0 9c0 6 9 13 9 13s9-7 9-13C18 4 14 0 9 0z" fill="#FF5F57"/><circle cx="9" cy="9" r="3.5" fill="#fff"/></svg></div>
+              <span class="maplbl">Live</span>
+            </div>
+            <div class="tl" id="trackingTimeline"></div>
+            <div class="wa-hdr"><div class="wa-av">W</div><div><div class="wa-name">WISMO Delivery</div><div class="wa-st">online</div></div></div>
+            <div class="wa-body">
+              <div class="wa-msg wa-recv"><strong style="color:#075E54;display:block;font-size:10px;margin-bottom:2px">WISMO Delivery</strong><span id="waText">Rider update will appear here.</span><a class="wa-link" id="waLink">wismo.ke/track</a><div class="wa-time" id="waTime">--</div></div>
+              <div class="wa-msg wa-sent"><span id="waReply">Customer reply will appear here.</span><div class="wa-time" id="waReplyTime">--</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- INTAKE -->
+        <section id="view-intake" class="view">
+          <div class="card">
+            <h3>Behavioral event intake</h3>
+            <div class="row">
+              <div class="field"><label>Customer</label><input id="pxCustomer" placeholder="Customer ID or hash"></div>
+              <div class="field"><label>Event</label><select id="pxEvent"><option>page_view</option><option>product_view</option><option>add_to_cart</option><option>checkout_start</option><option>purchase</option></select></div>
+              <div class="field"><label>Source</label><input id="pxSource" value="store-gui"></div>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <div class="field"><label>Score delta</label><input id="pxScore" type="number" value="1"></div>
+              <div class="field"><button id="pxPost" class="btn">Post event</button></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Pixel events</h3>
+            <div class="tw"><table><thead><tr><th>Customer</th><th>Event</th><th>Source</th><th>Δ score</th><th>Time</th></tr></thead><tbody id="pixelBody"></tbody></table></div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = { order:'http://localhost:3001', notification:'http://localhost:3003', geo:'http://localhost:3002', pixel:'http://localhost:3007' };
+  const state = { orders:[] };
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const toast = m => { const t=document.createElement('div'); t.className='toast'; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),1800); };
+  const badgeFor = s => ({'Confirmed':'b-teal','Assigned':'b-blue','Picked up':'b-orange','In transit':'b-teal','Delivered':'b-green','Failed':'b-red'})[s]||'b-gray';
+  const fmt = n => 'KES ' + Number(n||0).toLocaleString();
+  const uid = () => 'WISMO-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + String(Math.floor(Math.random()*999)).padStart(3,'0');
+
+  async function get(u){ try{ const r=await fetch(u); return await r.json(); }catch{ return null; } }
+  async function post(u,b){ try{ const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); return await r.json(); }catch{ return null; } }
+
+  function showView(name){
+    $$('#view-orders,#view-rider,#view-tracking,#view-intake').forEach(el=>el.classList.toggle('active',el.id==='view-'+name));
+    $$('.side .nav').forEach(n=>n.classList.toggle('active',n.dataset.view===name));
+    const map={orders:['Orders','Order management and dispatch.'],rider:['Rider','Rider controls and active queue.'],tracking:['Tracking','Customer live tracking + WhatsApp updates.'],intake:['Intake','Pixel + behavioral event intake.']};
+    $('#viewTitle').textContent=map[name][0]; $('#alertText').textContent=map[name][1];
+    if(name==='rider') renderRiderView();
+    if(name==='tracking') renderTrackingView();
+  }
+  function switchOrdersPanel(name){
+    const p={orders:$('#panel-orders'),routes:$('#panel-routes'),merchants:$('#panel-merchants')};
+    Object.entries(p).forEach(([k,el])=>{ if(el) el.style.display = k===name?'':'none'; });
+    $$('#view-orders > .tabs .tab').forEach(t=>t.classList.toggle('active',t.dataset.panel===name));
+    if(name==='routes') refreshOrdersTable('#routeBody');
+    if(name==='merchants') loadMerchants();
+  }
+  function updateKPIs(){
+    const o=state.orders;
+    $('#kpiOrders').textContent=o.length;
+    $('#kpiDelivered').textContent=o.filter(x=>x.status==='Delivered').length;
+    $('#kpiRevenue').textContent=fmt(o.reduce((a,x)=>a+Number(x.value||0),0));
+    const etas=o.filter(x=>x.eta&&x.eta!=='--').map(x=>parseInt(x.eta));
+    $('#kpiEta').textContent=etas.length?Math.round(etas.reduce((a,b)=>a+b,0)/etas.length)+'m':'--';
+  }
+  function renderOrderRow(o){ return `<tr><td><div class="oid">${o.id}</div></td><td style="font-weight:600">${o.customer||'--'}</td><td style="color:var(--muted)">${o.zone||'--'}</td><td><span class="badge ${badgeFor(o.status)}">${o.status}</span></td><td style="color:var(--teal-lt);font-weight:700">${o.eta||'--'}</td><td style="text-align:right;font-weight:700">${fmt(o.value)}</td></tr>`; }
+  function refreshOrdersTable(id){
+    const tb=$(id);
+    if(!state.orders.length){ tb.innerHTML='<tr class="empty"><td colspan="6">No orders yet.</td></tr>'; updateKPIs(); return; }
+    tb.innerHTML=state.orders.map(renderOrderRow).join(''); updateKPIs();
+  }
+  async function loadOrders(){
+    const d=await get(`${API.order}/v1/orders`);
+    if(Array.isArray(d)) state.orders=d;
+    else state.orders=seedOrders();
+    refreshOrdersTable('#ordersBody'); refreshOrdersTable('#routeBody');
+  }
+  function seedOrders(){
+    return [
+      {id:'WISMO-260725-001',customer:'Amara Okeke',zone:'Westlands',status:'In transit',eta:'24m',value:2400},
+      {id:'WISMO-260725-002',customer:'Brian Mwangi',zone:'Kileleshwa',status:'Assigned',eta:'38m',value:1850},
+      {id:'WISMO-260725-003',customer:'Zawadi Fashions',zone:'CBD',status:'Delivered',eta:'--',value:5200},
+      {id:'WISMO-260725-004',customer:'Lina Atieno',zone:'Karen',status:'Picked up',eta:'52m',value:990}
+    ];
+  }
+  async function createOrder(order){
+    const c=await post(`${API.order}/v1/orders`,order);
+    if(c&&c.id) state.orders.unshift(c); else { state.orders.unshift({id:order.id||uid(),...order}); toast('Order queued locally'); }
+    refreshOrdersTable('#ordersBody'); refreshOrdersTable('#routeBody');
+  }
+  async function patchStatus(id,status){
+    const u=await post(`${API.order}/v1/orders/${id}/status`,{status});
+    if(!u){ const o=state.orders.find(x=>x.id===id); if(o) o.status=status; }
+    refreshOrdersTable('#ordersBody'); refreshOrdersTable('#routeBody');
+  }
+
+  $$('.side .nav').forEach(n=>n.addEventListener('click',()=>showView(n.dataset.view)));
+  $$('#view-orders > .tabs .tab').forEach(t=>t.addEventListener('click',()=>switchOrdersPanel(t.dataset.panel)));
+
+  $('#createOrder').addEventListener('click',async()=>{
+    const order={id:$('#orderId').value||uid(),customer:$('#orderCustomer').value||'Customer',zone:$('#orderZone').value||'N/A',value:Number(($('#orderValue').value||'0').replace(/[^0-9.]/g,'')),status:$('#orderStatus').value,eta:'--'};
+    await createOrder(order); toast('Order created');
+    ['#orderId','#orderCustomer','#orderZone','#orderValue'].forEach(i=>$(i).value='');
+  });
+  $('#routeUpdate').addEventListener('click',async()=>{
+    const id=$('#routeOrderId').value||uid(),status=$('#routeStatus').value,zone=$('#routeZone').value||'--';
+    await patchStatus(id,status);
+    if(!state.orders.find(o=>o.id===id)) state.orders.unshift({id,customer:'Rider / merchant',zone,status,eta:'--',value:0});
+    refreshOrdersTable('#routeBody'); toast('Route status: '+status);
+  });
+
+  function renderMerchantRow(m){ return `<tr><td><div class="oid">${m.id}</div></td><td style="font-weight:600">${m.name||'--'}</td><td style="color:var(--muted)">${m.contact||'--'}</td><td style="color:var(--muted)">${m.zone||'--'}</td><td><span class="badge b-gray">${m.status||'Active'}</span></td><td style="text-align:right"><button class="btn ghost" style="padding:4px 9px;font-size:10px" data-del="${m.id}">Remove</button></td></tr>`; }
+  async function loadMerchants(){
+    const tb=$('#merchantBody'); const list=await get(`${API.order}/v1/merchants`);
+    if(!Array.isArray(list)||!list.length){ tb.innerHTML='<tr class="empty"><td colspan="6">No merchants yet.</td></tr>'; return; }
+    tb.innerHTML=list.map(renderMerchantRow).join('');
+    tb.querySelectorAll('button[data-del]').forEach(b=>b.addEventListener('click',async()=>{
+      const r=await fetch(`${API.order}/v1/merchants/${b.dataset.del}`,{method:'DELETE'});
+      if(r.ok){ b.closest('tr').remove(); toast('Merchant removed'); } else toast('Remove failed');
+    }));
+  }
+  $('#mCreate').addEventListener('click',async()=>{
+    const p={name:$('#mName').value||'Unnamed',contact:$('#mContact').value||null,zone:$('#mZone').value||'N/A',status:'Active'};
+    const c=await post(`${API.order}/v1/merchants`,p);
+    if(!c||!c.id){ toast('Merchant queued locally'); return; }
+    const tb=$('#merchantBody'); const er=tb.querySelector('.empty'); if(er) er.remove();
+    const row=document.createElement('tr'); row.innerHTML=renderMerchantRow(c);
+    row.querySelector('button[data-del]').addEventListener('click',async()=>{ const r=await fetch(`${API.order}/v1/merchants/${c.id}`,{method:'DELETE'}); if(r.ok){row.remove();toast('Merchant removed');}else toast('Remove failed'); });
+    tb.prepend(row); toast('Merchant added');
+    ['#mName','#mContact','#mZone'].forEach(i=>$(i).value='');
+  });
+
+  $('#pxPost').addEventListener('click',async()=>{
+    const p={customer_id:$('#pxCustomer').value||'anon',event:$('#pxEvent').value,source:$('#pxSource').value,dwell_time_s:20,scroll_depth:30,score_delta:Number($('#pxScore').value||1)};
+    await post(`${API.pixel}/v1/pixel/event`,p);
+    const tb=$('#pixelBody'); const er=tb.querySelector('.empty'); if(er) er.remove();
+    const row=document.createElement('tr'); row.innerHTML=`<td><div class="oid">${p.customer_id}</div></td><td>${p.event}</td><td style="color:var(--muted)">${p.source}</td><td><span class="badge b-green">+${p.score_delta}</span></td><td>${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td>`;
+    tb.prepend(row); toast('Pixel event posted');
+  });
+
+  $('#btnPickedUp').addEventListener('click',async()=>{
+    const id=$('#riderOrderId').textContent; const o=state.orders.find(x=>x.id===id);
+    if(o) await patchStatus(id,'Picked up');
+    $('#riderOrderId').textContent=uid(); $('#riderPickup').textContent='Next pickup — CBD';
+    $('#riderDrop').textContent='Kamau Njoroge, Kileleshwa'; $('#riderValue').textContent=String(Math.floor(Math.random()*4000)+800);
+    toast('Picked up confirmed');
+  });
+  $('#btnReport').addEventListener('click',()=>toast('Issue reported — dispatcher notified'));
+
+  function renderRiderView(){
+    const o=state.orders||[], next=o[0]||null;
+    $('#activeOrdersLabel').textContent=o.length+' active orders';
+    $('#earningsLabel').textContent='KES '+o.reduce((a,x)=>a+Number(x.value||0),0).toLocaleString();
+    if($('#riderOrderId')&&next){
+      $('#riderOrderId').textContent=next.id; $('#riderPickup').textContent=next.customer?'Pickup: '+next.customer:'Pickup';
+      $('#riderDrop').textContent='→ '+(next.zone||'Zone')+' · '+(next.eta||'--'); $('#riderValue').textContent=Number(next.value||0).toLocaleString();
+    }
+    const ql=$('#queueList'); if(ql) ql.innerHTML=o.slice(1,5).map(x=>`<div class="qi"><span class="qid">${x.id}</span><span>${x.zone||'--'}</span><span class="qv">${x.status}</span></div>`).join('')||'<div class="qi"><span>Queue empty</span></div>';
+  }
+  function renderTrackingView(){
+    const o=state.orders[0]||null; bindTracking(o);
+  }
+  function bindTracking(order){
+    if(!order) return;
+    const stages=['WhatsApp Intake','Order Created','Geo Locked','Route Computed','Out for Delivery','Delivered'];
+    const idx=Math.max(0,['Confirmed','Assigned','Picked up','In transit','Delivered'].indexOf(order.status));
+    const tl=$('#trackingTimeline');
+    tl.innerHTML=stages.map((s,i)=>{ const st=i<=idx?'done':(i===idx+1?'active':'pending'); return `<div class="tli"><div class="td ${st}">${st==='done'?'✓':i+1}</div><div><div class="tll">${s}</div><div class="tls">${st==='pending'?'pending':'completed'}</div></div><div class="tlt">${st==='pending'?'':new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div>`; }).join('');
+    $('#trackRef').textContent=order.id; $('#trackRef2').textContent=order.id; $('#trackEta').textContent=order.eta||'--';
+    $('#waText').textContent=`Rider update for ${order.id}: ${order.status}`;
+    $('#waTime').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    $('#waReply').textContent=order.customer?`${order.customer} — Asante! Nitatazama.`:'Awaiting customer reply.';
+    $('#waReplyTime').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  }
+
+  (async function init(){
+    await loadOrders();
+    if(state.orders.length) bindTracking(state.orders[0]);
+    showView('orders');
+  })();
+</script>
+</body>
+</html>

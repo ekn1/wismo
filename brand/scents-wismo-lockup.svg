@@ -1,0 +1,22 @@
+<svg width="280" height="64" viewBox="0 0 280 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SCENTS and WISMO">
+  <defs>
+    <linearGradient id="lSc" x1="4" y1="6" x2="44" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B2E4F"/><stop offset="1" stop-color="#0E5A8A"/>
+    </linearGradient>
+    <linearGradient id="lWi" x1="4" y1="6" x2="44" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B5563"/><stop offset="1" stop-color="#0E7490"/>
+    </linearGradient>
+  </defs>
+  <!-- SCENTS mark -->
+  <circle cx="24" cy="32" r="16" fill="url(#lSc)"/>
+  <circle cx="24" cy="32" r="5" fill="#C99A3B"/>
+  <path d="M24 16 L24 24 M14 24 L20 28 M34 24 L28 28" stroke="#C99A3B" stroke-width="2" stroke-linecap="round" stroke-opacity="0.8"/>
+  <text x="46" y="38" font-family="Georgia, serif" font-size="22" font-weight="700" fill="#0A1A2F">SCENTS</text>
+  <!-- x -->
+  <text x="128" y="40" font-family="Georgia, serif" font-size="22" font-style="italic" font-weight="700" fill="#C99A3B">×</text>
+  <!-- WISMO mark -->
+  <circle cx="170" cy="32" r="16" fill="url(#lWi)"/>
+  <path d="M170 24 C178 24 178 14 170 14 C162 14 162 24 170 24 Z" fill="#E8B85D"/>
+  <circle cx="152" cy="44" r="6" fill="url(#lWi)"/>
+  <text x="192" y="38" font-family="Georgia, serif" font-size="22" font-weight="700" fill="#0A1A2F">WISMO</text>
+</svg>

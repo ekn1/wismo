@@ -1,0 +1,19 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WISMO logo">
+  <defs>
+    <linearGradient id="wiGrad" x1="18" y1="18" x2="102" y2="102" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B5563"/>
+      <stop offset="1" stop-color="#0E7490"/>
+    </linearGradient>
+  </defs>
+  <!-- route path -->
+  <path d="M20 96 C40 60 56 100 74 56 S96 26 100 24" stroke="#0E7490" stroke-width="3" stroke-opacity="0.35" stroke-linecap="round" fill="none"/>
+  <!-- location pin formed from the path endpoint -->
+  <path d="M100 24 C112 24 112 8 100 8 C88 8 88 24 100 24 Z" fill="url(#wiGrad)"/>
+  <circle cx="100" cy="18" r="4" fill="#E8B85D"/>
+  <!-- moving dot -->
+  <circle cx="20" cy="96" r="9" fill="url(#wiGrad)"/>
+  <circle cx="20" cy="96" r="3.5" fill="#E8B85D"/>
+  <!-- track pings -->
+  <circle cx="47" cy="78" r="2.5" fill="#0E7490" fill-opacity="0.5"/>
+  <circle cx="74" cy="56" r="2.5" fill="#0E7490" fill-opacity="0.5"/>
+</svg>

@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WISMO · Where-Is-My-Order Intelligence</title>
+<style>
+  :root{
+    --navy:#0A1A2F; --navy-2:#0B2E4F; --panel:#0E1B2E; --panel-2:#0F2236;
+    --teal:#0E7490; --teal-dk:#0B5563; --teal-lt:#19A0BF;
+    --amber:#E8B85D; --amber-dk:#C99A3B;
+    --ink:#EAF1F7; --muted:#8FA3B8; --muted-2:#6B7E93;
+    --line:#1C2E44; --line-2:#27425E;
+    --green:#28C840; --red:#FF5F57; --wa:#25D366;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --r:14px; --r-lg:20px; --r-xl:28px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--navy);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;line-height:1.55;overflow-x:hidden}
+  .grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(1100px 620px at 82% -8%, rgba(14,116,144,.30) 0%, rgba(10,26,47,0) 60%),
+      radial-gradient(900px 520px at -5% 8%, rgba(201,154,59,.10) 0%, rgba(10,26,47,0) 55%),
+      linear-gradient(var(--line) 1px,transparent 1px) 0 0/46px 46px,
+      linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/46px 46px;
+    opacity:.5;mask-image:radial-gradient(120% 90% at 50% 0%,#000 55%,transparent 100%)}
+  .wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 24px}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- NAV ---------- */
+  nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);
+    background:rgba(10,26,47,.78);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;gap:18px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em}
+  .brand svg{width:30px;height:30px;display:block}
+  .brand .wm{font-size:18px}
+  .brand .wm b{color:var(--teal-lt)}
+  .nav-links{margin-left:auto;display:flex;gap:6px;align-items:center}
+  .nav-links a{font-size:13.5px;color:var(--muted);padding:8px 12px;border-radius:10px;transition:.15s}
+  .nav-links a:hover{color:var(--ink);background:var(--panel-2)}
+  .nav-cta{background:linear-gradient(135deg,var(--teal),var(--teal-dk));color:#fff!important;font-weight:600;
+    box-shadow:0 6px 18px rgba(14,116,144,.35)}
+  .nav-cta:hover{filter:brightness(1.08)}
+  @media(max-width:760px){.nav-links a:not(.nav-cta){display:none}}
+
+  /* ---------- HERO ---------- */
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;
+    padding:72px 0 56px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--amber);display:inline-flex;align-items:center;gap:9px;margin:0 0 18px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--amber);display:inline-block}
+  h1{font-size:clamp(34px,5.2vw,56px);line-height:1.04;margin:0 0 18px;letter-spacing:-.02em;font-weight:700}
+  h1 .accent{background:linear-gradient(120deg,var(--teal-lt),var(--amber));-webkit-background-clip:text;
+    background-clip:text;color:transparent}
+  .lede{font-size:17px;color:var(--muted);max-width:480px;margin:0 0 26px}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:13px 20px;border-radius:12px;font-weight:600;
+    font-size:14.5px;cursor:pointer;border:1px solid transparent;transition:.16s}
+  .btn-pri{background:linear-gradient(135deg,var(--teal),var(--teal-dk));color:#fff;
+    box-shadow:0 10px 26px rgba(14,116,144,.38)}
+  .btn-pri:hover{transform:translateY(-2px);filter:brightness(1.07)}
+  .btn-ghost{background:var(--panel-2);border-color:var(--line-2);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--teal);color:var(--teal-lt)}
+  .hero-meta{display:flex;gap:26px;margin-top:30px;flex-wrap:wrap}
+  .hero-meta .m{font-family:var(--mono);font-size:12px;color:var(--muted-2)}
+  .hero-meta .m b{display:block;color:var(--amber);font-size:15px;font-weight:600;margin-top:3px;letter-spacing:.02em}
+
+  /* ---------- HERO TRACK PANEL ---------- */
+  .track-card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);
+    border-radius:var(--r-xl);padding:22px;box-shadow:0 30px 70px rgba(0,0,0,.45);position:relative;overflow:hidden}
+  .track-card .tc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .track-card .tc-head .t{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  .live{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--green)}
+  .live .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(40,200,64,.6);
+    animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(40,200,64,.55)}70%{box-shadow:0 0 0 9px rgba(40,200,64,0)}100%{box-shadow:0 0 0 0 rgba(40,200,64,0)}}
+  .track-input{display:flex;gap:8px;margin-bottom:18px}
+  .track-input input{flex:1;background:var(--navy);border:1px solid var(--line-2);color:var(--ink);
+    border-radius:10px;padding:12px 14px;font-family:var(--mono);font-size:13.5px;outline:none;transition:.15s}
+  .track-input input:focus{border-color:var(--teal)}
+  .track-input button{background:linear-gradient(135deg,var(--teal),var(--teal-dk));border:0;color:#fff;
+    font-weight:600;font-size:13.5px;padding:0 16px;border-radius:10px;cursor:pointer;font-family:var(--mono)}
+  .track-input button:hover{filter:brightness(1.08)}
+  .track-input button:disabled{opacity:.5;cursor:wait}
+
+  .route-viz{position:relative;height:62px;margin:6px 0 18px}
+  .route-viz svg{width:100%;height:100%;overflow:visible}
+  .route-path{stroke:var(--line-2);stroke-width:2.5;fill:none;stroke-linecap:round}
+  .route-path-live{stroke:url(#rp);stroke-width:3;fill:none;stroke-linecap:round;
+    stroke-dasharray:340;stroke-dashoffset:340;transition:stroke-dashoffset 1.1s ease}
+  .pkg{fill:var(--amber);filter:drop-shadow(0 0 7px rgba(232,184,93,.7))}
+
+  .timeline{display:flex;flex-direction:column;gap:0;margin:0;padding:0;list-style:none}
+  .tl{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:12px;padding:9px 0;position:relative}
+  .tl:not(:last-child)::before{content:"";position:absolute;left:12px;top:26px;bottom:-9px;width:2px;background:var(--line-2)}
+  .tl .ic{width:26px;height:26px;border-radius:50%;border:2px solid var(--line-2);display:grid;place-items:center;
+    font-family:var(--mono);font-size:11px;color:var(--muted-2);background:var(--navy);z-index:1}
+  .tl.done .ic{background:var(--teal);border-color:var(--teal);color:#fff}
+  .tl.active .ic{border-color:var(--amber);color:var(--amber);box-shadow:0 0 0 4px rgba(232,184,93,.16);animation:pulseA 1.6s infinite}
+  @keyframes pulseA{0%{box-shadow:0 0 0 0 rgba(232,184,93,.30)}70%{box-shadow:0 0 0 7px rgba(232,184,93,0)}100%{box-shadow:0 0 0 0 rgba(232,184,93,0)}}
+  .tl .nm{font-size:14px;color:var(--muted)}
+  .tl.done .nm,.tl.active .nm{color:var(--ink)}
+  .tl.active .nm{font-weight:600}
+  .tl .ts{font-family:var(--mono);font-size:11px;color:var(--muted-2)}
+  .track-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;
+    padding-top:14px;border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}
+  .track-foot .eta{color:var(--amber);font-size:15px;font-weight:600}
+  .track-foot .city{color:var(--muted)}
+  .err{color:var(--red);font-family:var(--mono);font-size:12px;min-height:16px;margin-top:-8px;margin-bottom:8px}
+  /* ---------- PROCESS SIMULATION STRIP ---------- */
+  .proc{display:flex;gap:6px;margin:2px 0 12px}
+  .proc-step{flex:1;display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;opacity:.45;transition:.25s}
+  .proc-step .ps-num{width:26px;height:26px;border-radius:50%;border:2px solid var(--line-2);display:grid;place-items:center;
+    font-family:var(--mono);font-size:11px;color:var(--muted-2);background:var(--navy);transition:.25s}
+  .proc-step .ps-lb{font-size:10.5px;color:var(--muted-2);line-height:1.2;max-width:64px}
+  .proc-step.active{opacity:1}
+  .proc-step.active .ps-num{border-color:var(--amber);color:var(--amber);box-shadow:0 0 0 4px rgba(232,184,93,.16);animation:pulseA 1.4s infinite}
+  .proc-step.done{opacity:1}
+  .proc-step.done .ps-num{background:var(--teal);border-color:var(--teal);color:#fff}
+  .proc-step.done .ps-lb{color:var(--ink)}
+  .proc-msg{font-family:var(--mono);font-size:11.5px;color:var(--teal-lt);min-height:15px;margin:-4px 0 10px;text-align:center}
+
+  /* ---------- LOGO BAND ---------- */
+  .band{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(14,27,46,.5);
+    padding:18px 0;margin:8px 0 0}
+  .band-row{display:flex;align-items:center;gap:30px;flex-wrap:wrap;justify-content:center;
+    font-family:var(--mono);font-size:12.5px;color:var(--muted-2);letter-spacing:.04em}
+  .band-row span{display:inline-flex;align-items:center;gap:8px}
+  .band-row .pip{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+
+  /* ---------- SECTION SHELL ---------- */
+  section.block{padding:74px 0}
+  .s-head{max-width:640px;margin-bottom:38px}
+  .s-ey{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--teal-lt)}
+  .s-h{font-size:clamp(26px,3.4vw,36px);margin:12px 0 10px;letter-spacing:-.01em;font-weight:700}
+  .s-sub{color:var(--muted);font-size:16px;margin:0}
+
+  /* ---------- AUDIENCE TABS ---------- */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+  .tab{font-family:var(--mono);font-size:13px;color:var(--muted);background:var(--panel-2);
+    border:1px solid var(--line-2);padding:10px 16px;border-radius:11px;cursor:pointer;transition:.15s}
+  .tab:hover{color:var(--ink)}
+  .tab.on{background:linear-gradient(135deg,var(--teal),var(--teal-dk));color:#fff;border-color:transparent}
+  .panel{display:none;grid-template-columns:1fr 1fr;gap:38px;align-items:center;animation:fade .35s ease}
+  .panel.on{display:grid}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .panel h3{font-size:23px;margin:0 0 10px;letter-spacing:-.01em}
+  .panel p{color:var(--muted);margin:0 0 16px}
+  .panel ul{list-style:none;margin:0;padding:0;display:grid;gap:11px}
+  .panel li{display:flex;gap:11px;align-items:flex-start;font-size:14.5px;color:var(--ink)}
+  .panel li .ck{color:var(--teal-lt);font-family:var(--mono);flex:none;margin-top:2px}
+  .flow{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);
+    border-radius:var(--r-lg);padding:20px;display:flex;flex-direction:column;gap:0}
+  .flow .step{display:flex;gap:13px;align-items:flex-start}
+  .flow .step:not(:last-child){padding-bottom:16px;position:relative}
+  .flow .step:not(:last-child)::before{content:"";position:absolute;left:13px;top:28px;bottom:4px;width:2px;background:var(--line-2)}
+  .flow .n{width:27px;height:27px;border-radius:8px;background:var(--teal-dk);color:#fff;display:grid;place-items:center;
+    font-family:var(--mono);font-size:12px;flex:none;z-index:1}
+  .flow .st{font-size:14px}
+  .flow .st b{display:block;font-weight:600}
+  .flow .st small{color:var(--muted-2);font-family:var(--mono);font-size:11.5px}
+
+  /* ---------- MODULE EXPLORER ---------- */
+  .mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+  .mod{position:relative;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line-2);border-radius:var(--r-lg);padding:22px 20px 18px;cursor:pointer;
+    transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;overflow:hidden}
+  .mod::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--teal),var(--amber));opacity:.5;transform:scaleX(.35);
+    transform-origin:left;transition:transform .28s ease,opacity .28s ease}
+  .mod:hover{transform:translateY(-4px);border-color:var(--teal);box-shadow:0 18px 44px rgba(14,116,144,.22)}
+  .mod:hover::before{transform:scaleX(1);opacity:1}
+  .mod .chip{width:46px;height:46px;border-radius:13px;background:rgba(14,116,144,.14);
+    border:1px solid var(--line-2);display:grid;place-items:center;margin-bottom:16px;transition:.2s}
+  .mod:hover .chip{background:rgba(14,116,144,.24);border-color:var(--teal)}
+  .mod .glyph{width:24px;height:24px}
+  .mod h4{margin:0 0 7px;font-size:16.5px;letter-spacing:-.01em}
+  .mod p{margin:0;color:var(--muted);font-size:13.5px;flex:1}
+  .mod .tag{position:absolute;top:18px;right:18px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+    color:var(--amber);text-transform:uppercase;opacity:.85}
+  .mod .open{margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    font-family:var(--mono);font-size:12px;color:var(--teal-lt);border-top:1px solid var(--line);padding-top:13px}
+  .mod .open .arrow{transition:transform .2s ease}
+  .mod:hover .open{color:var(--amber)}
+  .mod:hover .open .arrow{transform:translateX(5px)}
+
+  /* featured rider companion block */
+  .rider{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;margin-top:22px;
+    background:linear-gradient(115deg,rgba(14,116,144,.20),rgba(201,154,59,.10));
+    border:1px solid var(--line-2);border-radius:var(--r-xl);padding:24px 26px;position:relative;overflow:hidden}
+  .rider::before{content:"";position:absolute;inset:0;
+    background:radial-gradient(420px 200px at 100% 0%,rgba(232,184,93,.12),transparent 60%);pointer-events:none}
+  .rider .ricon{width:58px;height:58px;border-radius:16px;background:rgba(232,184,93,.14);
+    border:1px solid rgba(232,184,93,.4);display:grid;place-items:center;position:relative}
+  .rider .ricon svg{width:30px;height:30px}
+  .rider .rider-copy{position:relative}
+  .rider .badge{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+    color:var(--amber);text-transform:uppercase;margin-bottom:7px}
+  .rider h4{margin:0 0 6px;font-size:20px;letter-spacing:-.01em}
+  .rider p{margin:0;color:var(--muted);font-size:14.5px;max-width:600px}
+  .rider .cta{display:inline-flex;align-items:center;gap:8px;background:var(--navy);border:1px solid var(--line-2);
+    color:var(--ink);font-weight:600;font-size:14px;padding:12px 18px;border-radius:12px;transition:.16s;white-space:nowrap;position:relative}
+  .rider .cta:hover{border-color:var(--amber);color:var(--amber)}
+  @media(max-width:760px){.rider{grid-template-columns:1fr;gap:16px}.rider .cta{justify-content:center}}
+
+  /* ---------- INTERACTIVE PIPELINE ---------- */
+  .pipe{display:grid;grid-template-columns:1.55fr 1fr;gap:20px;margin-top:12px;align-items:stretch}
+  .pipe-stage{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);
+    border-radius:var(--r-lg);padding:18px 16px;display:flex;align-items:center}
+  #pipeSvg{width:100%;height:auto;display:block}
+  .pipe-node{cursor:pointer}
+  .pipe-node .pn-box{fill:var(--navy-2);stroke:var(--line-2);stroke-width:1.5;transition:.18s}
+  .pipe-node:hover .pn-box{stroke:var(--teal)}
+  .pipe-node.sel .pn-box{stroke:var(--amber);stroke-width:2.2;fill:#0B2E4F}
+  .pipe-node .pn-glyph{stroke:#19A0BF;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .pipe-node.sel .pn-glyph{stroke:var(--amber)}
+  .pipe-node .pn-nm{fill:var(--ink);font-size:12px;font-weight:600;text-anchor:middle;font-family:var(--ui)}
+  .pipe-node .pn-pt{fill:var(--teal-lt);font-size:9.5px;text-anchor:middle;font-family:var(--mono)}
+  .pipe-node .pn-dot{fill:var(--muted-2)}
+  .pipe-node.up .pn-dot{fill:var(--green)}
+  .pipe-node.down .pn-dot{fill:var(--red)}
+  #pipePulse{filter:drop-shadow(0 0 5px rgba(232,184,93,.8));animation:pulseMove 5.5s linear infinite}
+  @keyframes pulseMove{from{stroke-dashoffset:0}to{stroke-dashoffset:-960}}
+  #pipeGlow{animation:glowFlow 5.5s linear infinite}
+  @keyframes glowFlow{from{stroke-dashoffset:0}to{stroke-dashoffset:-960}}
+  .pipe-detail{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);
+    border-radius:var(--r-lg);padding:20px 22px;min-height:180px}
+  .pd-empty{color:var(--muted-2);font-size:14px;display:flex;align-items:center;height:100%;text-align:center;justify-content:center}
+  .pd-tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;padding:3px 9px;border-radius:20px;background:var(--teal-lt);color:var(--teal);margin-bottom:10px}
+  .pd-h{font-size:19px;font-weight:700;margin:0 0 4px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
+  .pd-h .pd-dot{width:10px;height:10px;border-radius:50%;background:var(--green)}
+  .pd-h .pd-dot.down{background:var(--red)}
+  .pd-port{font-family:var(--mono);font-size:13px;color:var(--amber);margin-bottom:12px}
+  .pd-desc{color:var(--muted);font-size:14.5px;line-height:1.55;margin:0 0 14px}
+  .pd-rows{display:grid;gap:8px}
+  .pd-row{display:flex;justify-content:space-between;gap:12px;font-size:13px;border-top:1px solid var(--line);padding-top:8px}
+  .pd-row .k{color:var(--muted-2);font-family:var(--mono);font-size:11.5px}
+  .pd-row .v{color:var(--ink);font-family:var(--mono);font-size:12px;text-align:right}
+  .pd-cta{display:inline-flex;align-items:center;gap:7px;margin-top:14px;background:var(--navy);border:1px solid var(--line-2);
+    color:var(--ink);font-weight:600;font-size:13px;padding:10px 15px;border-radius:11px;transition:.16s}
+  .pd-cta:hover{border-color:var(--amber);color:var(--amber)}
+
+  /* ---------- SYSTEM STATUS ---------- */
+  .status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat-card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);
+    border-radius:var(--r-lg);padding:15px 16px;display:flex;align-items:center;gap:12px;transition:.18s}
+  .stat-card:hover{border-color:var(--teal)}
+  .stat-dot{width:11px;height:11px;border-radius:50%;flex:none;background:var(--muted-2)}
+  .stat-dot.up{background:var(--green);animation:pulseG 2s infinite}
+  .stat-dot.down{background:var(--red)}
+  @keyframes pulseG{0%{box-shadow:0 0 0 0 rgba(40,200,64,.45)}70%{box-shadow:0 0 0 7px rgba(40,200,64,0)}100%{box-shadow:0 0 0 0 rgba(40,200,64,0)}}
+  .stat-meta .nm{font-size:13.5px;font-weight:600}
+  .stat-meta .pt{font-family:var(--mono);font-size:11px;color:var(--muted-2)}
+  .status-summary{display:flex;align-items:center;gap:12px;margin-top:16px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .status-summary .badge{font-weight:700;padding:4px 11px;border-radius:20px}
+  .status-summary .badge.ok{background:var(--green-lt);color:var(--green)}
+  .status-summary .badge.partial{background:var(--orange-lt);color:var(--orange)}
+  .final{background:linear-gradient(135deg,rgba(14,116,144,.22),rgba(201,154,59,.10));
+    border:1px solid var(--line-2);border-radius:var(--r-xl);padding:46px;text-align:center;margin:0 0 70px}
+  .final h2{font-size:clamp(26px,3.6vw,38px);margin:0 0 12px;letter-spacing:-.02em}
+  .final p{color:var(--muted);max-width:540px;margin:0 auto 24px}
+  .final .hero-cta{justify-content:center}
+
+  footer{border-top:1px solid var(--line);padding:30px 0 50px;color:var(--muted-2);font-family:var(--mono);font-size:12px}
+  .foot-in{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+  .foot-in .lg{display:flex;align-items:center;gap:9px;color:var(--muted)}
+  .foot-in .lg svg{width:24px;height:24px}
+
+  @media(max-width:880px){
+    .hero{grid-template-columns:1fr;gap:34px;padding:48px 0 36px}
+    .panel.on{grid-template-columns:1fr;gap:22px}
+    .mod-grid{grid-template-columns:1fr 1fr}
+    .pipe{grid-template-columns:1fr}
+  }
+  @media(max-width:540px){.mod-grid{grid-template-columns:1fr}.pipe{grid-template-columns:1fr}.final{padding:30px 20px}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.route-path-live{stroke-dashoffset:0!important}}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="wrap nav-in">
+    <a class="brand" href="#top" aria-label="WISMO home">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="navG" x1="18" y1="18" x2="102" y2="102" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0B5563"/><stop offset="1" stop-color="#0E7490"/></linearGradient></defs>
+        <path d="M20 96 C40 60 56 100 74 56 S96 26 100 24" stroke="#0E7490" stroke-width="3" stroke-opacity=".35" stroke-linecap="round" fill="none"/>
+        <path d="M100 24 C112 24 112 8 100 8 C88 8 88 24 100 24 Z" fill="url(#navG)"/>
+        <circle cx="100" cy="18" r="4" fill="#E8B85D"/>
+        <circle cx="20" cy="96" r="9" fill="url(#navG)"/><circle cx="20" cy="96" r="3.5" fill="#E8B85D"/>
+        <circle cx="47" cy="78" r="2.5" fill="#0E7490" fill-opacity=".5"/><circle cx="74" cy="56" r="2.5" fill="#0E7490" fill-opacity=".5"/></svg>
+      <span class="wm">WI<b>S</b>MO</span>
+    </a>
+    <div class="nav-links">
+      <a href="#audience">Who it's for</a>
+      <a href="#modules">Modules</a>
+      <a href="#arch">Architecture</a>
+      <a class="nav-cta" href="#demo">Track a demo order</a>
+    </div>
+  </div>
+</nav>
+
+<a id="top"></a>
+<div class="wrap">
+
+  <!-- HERO -->
+  <header class="hero" id="demo">
+    <div class="hero-copy">
+      <p class="eyebrow">Where-Is-My-Order Intelligence</p>
+      <h1>Every order, <span class="accent">tracked end-to-end</span> — from first WhatsApp ping to doorstep.</h1>
+      <p class="lede">WISMO turns scattered delivery chaos into one live thread. Customers ask in chat, the system answers with a real location, route, and ETA — no call center, no guesswork.</p>
+      <div class="hero-cta">
+        <a class="btn btn-pri" href="#audience">See how it works →</a>
+        <a class="btn btn-ghost" href="#modules">Explore the modules</a>
+      </div>
+      <div class="hero-meta">
+        <div class="m">Channels<b>WhatsApp · Portal · QR</b></div>
+        <div class="m">Core<b>Order · Geo · Route</b></div>
+        <div class="m">Intelligence<b>Delphi BI</b></div>
+      </div>
+    </div>
+
+    <!-- live track panel -->
+    <div class="track-card" aria-label="Live order tracking demo">
+      <div class="tc-head">
+        <span class="t">Live Track · Demo</span>
+        <span class="live"><span class="dot"></span> connected</span>
+      </div>
+      <form class="track-input" id="trackForm" autocomplete="off">
+        <input id="oid" type="text" placeholder="Order ID — try WMO-4821" value="WMO-4821" aria-label="Order ID">
+        <button type="submit" id="trackBtn">Track</button>
+      </form>
+      <div class="err" id="trackErr"></div>
+      <div class="proc" id="procSteps"></div>
+      <div class="proc-msg" id="procMsg">Click Track to simulate the full WISMO flow.</div>
+      <div class="route-viz" aria-hidden="true">
+        <svg viewBox="0 0 320 62" preserveAspectRatio="none">
+          <defs><linearGradient id="rp" x1="0" y1="62" x2="320" y2="2" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0B5563"/><stop offset="1" stop-color="#E8B85D"/></linearGradient></defs>
+          <path class="route-path" d="M8 54 C70 50 90 18 150 22 S250 44 312 10"/>
+          <path id="routeLive" class="route-path-live" d="M8 54 C70 50 90 18 150 22 S250 44 312 10"/>
+          <circle id="pkg" class="pkg" cx="8" cy="54" r="5"/>
+        </svg>
+      </div>
+      <ul class="timeline" id="timeline"></ul>
+      <div class="track-foot">
+        <span class="city" id="footCity">—</span>
+        <span class="eta" id="footEta">ETA —</span>
+      </div>
+    </div>
+  </header>
+</div>
+
+<!-- LOGO BAND -->
+<div class="band"><div class="wrap band-row">
+  <span><i class="pip"></i> WhatsApp intake</span>
+  <span><i class="pip"></i> Order service</span>
+  <span><i class="pip"></i> Geo + Route</span>
+  <span><i class="pip"></i> QR &amp; Notifications</span>
+  <span><i class="pip"></i> Customer Portal</span>
+  <span><i class="pip"></i> Delphi BI</span>
+</div></div>
+
+<div class="wrap">
+
+  <!-- AUDIENCE -->
+  <section class="block" id="audience">
+    <div class="s-head">
+      <p class="s-ey">Built for three sides of the same order</p>
+      <h2 class="s-h">One system, three clear seats</h2>
+      <p class="s-sub">The same live data serves the customer, the operator, and the business — each with the view they actually need.</p>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-k="shopper" role="tab">Shopper</button>
+      <button class="tab" data-k="ops" role="tab">Operations</button>
+      <button class="tab" data-k="biz" role="tab">Business</button>
+    </div>
+
+    <div class="panel on" data-p="shopper">
+      <div>
+        <h3>“Where’s my order?” — answered instantly</h3>
+        <p>Customers never leave WhatsApp. They send their order ID and get a live location, route progress, and ETA back in seconds.</p>
+        <ul>
+          <li><span class="ck">›</span> Plain-language status, no account needed</li>
+          <li><span class="ck">›</span> QR on the parcel opens the same live thread</li>
+          <li><span class="ck">›</span> Proactive ETA alerts before each handoff</li>
+        </ul>
+      </div>
+      <div class="flow">
+        <div class="step"><span class="n">1</span><div class="st"><b>Message in</b><small>WhatsApp · “WMO-4821?”</small></div></div>
+        <div class="step"><span class="n">2</span><div class="st"><b>Match order</b><small>order-service lookup</small></div></div>
+        <div class="step"><span class="n">3</span><div class="st"><b>Resolve location</b><small>geo + route compute</small></div></div>
+        <div class="step"><span class="n">4</span><div class="st"><b>Reply with ETA</b><small>notification service</small></div></div>
+      </div>
+    </div>
+
+    <div class="panel" data-p="ops">
+      <div>
+        <h3>Operators see the whole fleet, not just tickets</h3>
+        <p>A live operations console shows every in-flight order, route exceptions, and reroute candidates — so dispatchers act before a customer complains.</p>
+        <ul>
+          <li><span class="ck">›</span> Real-time queue depth &amp; circuit health</li>
+          <li><span class="ck">›</span> Reroute and cancellation workflows</li>
+          <li><span class="ck">›</span> Per-order drill-down with full timeline</li>
+        </ul>
+      </div>
+      <div class="flow">
+        <div class="step"><span class="n">1</span><div class="st"><b>Ingest</b><small>gateway · 3000</small></div></div>
+        <div class="step"><span class="n">2</span><div class="st"><b>Enrich</b><small>geo + route · 3002</small></div></div>
+        <div class="step"><span class="n">3</span><div class="st"><b>Monitor</b><small>notification · 3003</small></div></div>
+        <div class="step"><span class="n">4</span><div class="st"><b>Act</b><small>reroute / resolve</small></div></div>
+      </div>
+    </div>
+
+    <div class="panel" data-p="biz">
+      <div>
+        <h3>Leadership gets the signal, not the noise</h3>
+        <p>Delphi BI rolls order flow, exception rates, and delivery SLAs into one operational picture — the same data the shopper and operator see, aggregated.</p>
+        <ul>
+          <li><span class="ck">›</span> Delivery SLA &amp; exception dashboards</li>
+          <li><span class="ck">›</span> Per-branch / per-carrier breakdowns</li>
+          <li><span class="ck">›</span> Forecast accuracy &amp; anomaly watch</li>
+        </ul>
+      </div>
+      <div class="flow">
+        <div class="step"><span class="n">1</span><div class="st"><b>Collect</b><small>all services emit</small></div></div>
+        <div class="step"><span class="n">2</span><div class="st"><b>Model</b><small>JanusGraph · SAIM</small></div></div>
+        <div class="step"><span class="n">3</span><div class="st"><b>Surface</b><small>Delphi BI · 5025</small></div></div>
+        <div class="step"><span class="n">4</span><div class="st"><b>Decide</b><small>forecast + act</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULES -->
+  <section class="block" id="modules">
+    <div class="s-head">
+      <p class="s-ey">The modules</p>
+      <h2 class="s-h">Six services, one thread</h2>
+      <p class="s-sub">Each module is a real service in the WISMO stack. Click any card to open its dashboard.</p>
+    </div>
+    <div class="mod-grid" id="modGrid"></div>
+  <div class="rider">
+    <div class="ricon"><svg viewBox="0 0 24 24" fill="none" stroke="#E8B85D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l2-5h6l3 5M14 13h4a2 2 0 002 2 2 2 0 01-2 2M5 17a2 2 0 104 0 2 2 0 00-4 0zM17 17a2 2 0 104 0 2 2 0 00-4 0z"/></svg></div>
+    <div class="rider-copy">
+      <span class="badge">Mobile companion</span>
+      <h4>Rider App</h4>
+      <p>The field side of WISMO — riders get turn-by-turn delivery, scan-to-confirm, and live reroute pushes straight from the Geo / Route service. One tap updates status; the customer sees it instantly.</p>
+    </div>
+    <a class="cta" href="/wismo/rider">Explore the rider app →</a>
+  </div>
+  </section>
+
+  <!-- ARCH / INTERACTIVE FLOWCHART -->
+  <section class="block" id="arch">
+    <div class="s-head">
+      <p class="s-ey">How it fits together</p>
+      <h2 class="s-h">A clean, observable pipeline</h2>
+      <p class="s-sub">Requests enter at the gateway, fan out to order / geo / route, and surface through notifications, the portal, and BI. Click any node to inspect the service — health is read live from the running stack.</p>
+    </div>
+    <div class="pipe">
+      <div class="pipe-stage">
+        <svg id="pipeSvg" viewBox="0 0 960 120" preserveAspectRatio="xMidYMid meet" role="img" aria-label="WISMO pipeline">
+          <!-- connectors drawn by JS -->
+          <path id="pipeBase" d="" fill="none" stroke="#27425E" stroke-width="2.5" stroke-dasharray="3 6"/>
+          <path id="pipeGlow" d="" fill="none" stroke="#0E7490" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 900" stroke-dashoffset="0"/>
+          <circle id="pipePulse" r="5" fill="#E8B85D" />
+          <g id="pipeNodes"></g>
+        </svg>
+      </div>
+      <div class="pipe-detail" id="pipeDetail">
+        <div class="pd-empty">Select a node to inspect the service.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SYSTEM STATUS -->
+  <section class="block" id="status">
+    <div class="s-head">
+      <p class="s-ey">Live system status</p>
+      <h2 class="s-h">The whole stack, one pulse</h2>
+      <p class="s-sub">Fetched in real time from the WISMO gateway — every service, every port, right now.</p>
+    </div>
+    <div class="status-grid" id="statusGrid"></div>
+    <div class="status-summary">
+      <span class="badge" id="statusBadge">…</span>
+      <span id="statusText">checking services…</span>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final">
+    <h2>Put every order on one live thread</h2>
+    <p>WISMO gives your customers certainty, your operators control, and your business a single source of delivery truth.</p>
+    <div class="hero-cta">
+      <a class="btn btn-pri" href="#demo">Try the live track demo ↑</a>
+      <a class="btn btn-ghost" href="/wismo/">Open the full dashboard</a>
+    </div>
+  </section>
+</div>
+
+<footer><div class="wrap foot-in">
+  <span class="lg">
+    <svg viewBox="0 0 120 120" aria-hidden="true"><path d="M20 96 C40 60 56 100 74 56 S96 26 100 24" stroke="#0E7490" stroke-width="3" stroke-opacity=".35" stroke-linecap="round" fill="none"/><path d="M100 24 C112 24 112 8 100 8 C88 8 88 24 100 24 Z" fill="#0E7490"/><circle cx="100" cy="18" r="4" fill="#E8B85D"/><circle cx="20" cy="96" r="9" fill="#0E7490"/><circle cx="20" cy="96" r="3.5" fill="#E8B85D"/></svg>
+    WISMO · SCENTS IQ
+  </span>
+  <span>Interactive landing · data is a live demo feed, not production</span>
+</div></footer>
+
+<script>
+// ---------- Module + arch data (real WISMO services) ----------
+const MODULES = [
+  {id:'gateway', name:'Gateway', port:'3000', tag:'edge', glyph:'M4 12h16M4 12l4-4M4 12l4 4', desc:'Single entry point for WhatsApp, portal, and API traffic. Routes every request to the right service.'},
+  {id:'order', name:'Order Service', port:'3001', tag:'core', glyph:'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5', desc:'Source of truth for an order’s lifecycle — created, matched, looked up, and resolved.'},
+  {id:'georoute', name:'Geo / Route', port:'3002', tag:'core', glyph:'M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zM12 11a2 2 0 100-4 2 2 0 000 4z', desc:'Locks the delivery location and computes the optimal route, with live reroute support.'},
+  {id:'notify', name:'Notification', port:'3003', tag:'out', glyph:'M4 6h16v10H7l-3 3zM8 10h8M8 13h5', desc:'Pushes proactive ETA alerts and status changes to WhatsApp and the customer portal.'},
+  {id:'portal', name:'Customer Portal', port:'—', tag:'ui', glyph:'M3 10l9-6 9 6M5 10v9h14v-9M9 19v-5h6v5', desc:'A self-serve view where customers track orders, scan QR, and see the live thread.'},
+  {id:'delphi', name:'Delphi BI', port:'5025', tag:'intel', glyph:'M4 19V5M4 19h16M8 15l3-4 3 2 4-6', desc:'Operational intelligence — SLAs, exceptions, and forecast accuracy across every order.'},
+];
+const ARCH = [
+  {id:'gateway', nm:'Gateway', pt:'3000', gw:'/orders', link:'/', glyph:'M4 12h16M4 12l4-4M4 12l4 4',
+   layer:'edge', desc:'Single entry point for WhatsApp, portal, and API traffic. Authenticates and fans every request to the right downstream service.',
+   detail:[['Protocol','HTTPS · WebSocket'],['Routes','orders, geo, route, notify, pixel, are, bridge, delphi'],['TLS','terminated at edge']]},
+  {id:'order', nm:'Order', pt:'3001', gw:'/orders', link:'/', glyph:'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5',
+   layer:'core', desc:'Source of truth for an order’s lifecycle — created, matched, looked up, and resolved. Emits events on every status change.',
+   detail:[['Store','Postgres (in-memory fallback)'],['Endpoints','GET/POST /v1/orders · /v1/merchants'],['Emits','order.created · order.status']]},
+  {id:'georoute', nm:'Geo / Route', pt:'3002', gw:'/geo', link:'/', glyph:'M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7zM12 11a2 2 0 100-4 2 2 0 000 4z',
+   layer:'core', desc:'Locks the delivery location and computes the optimal route, with live reroute support when a rider falls behind.',
+   detail:[['Resolves','lat/lng from address or QR'],['Computes','ETA + optimal path'],['Pushes','reroute to rider app']]},
+  {id:'notify', nm:'Notify', pt:'3003', gw:'/notify', link:'/', glyph:'M4 6h16v10H7l-3 3zM8 10h8M8 13h5',
+   layer:'out', desc:'Pushes proactive ETA alerts and status changes to WhatsApp and the customer portal the moment an order moves.',
+   detail:[['Channels','WhatsApp · in-app'],['Triggers','status → message'],['Format','templated, localized']]},
+  {id:'portal', nm:'Portal', pt:'UI', gw:null, link:'/', glyph:'M3 10l9-6 9 6M5 10v9h14v-9M9 19v-5h6v5',
+   layer:'ui', desc:'A self-serve view where customers track orders, scan QR, and see the live thread — the face of WISMO.',
+   detail:[['Surface','responsive web'],['Features','live track · QR scan'],['Source','dashboard host :8090']]},
+  {id:'delphi', nm:'Delphi', pt:'5025', gw:'/delphi', link:'/', glyph:'M4 19V5M4 19h16M8 15l3-4 3 2 4-6',
+   layer:'intel', desc:'Operational intelligence — SLAs, exceptions, and forecast accuracy across every order, aggregated from the whole stack.',
+   detail:[['Engine','JanusGraph · SAIM'],['Surfaces','SLA · exceptions · forecast'],['Port','5025 (FastAPI)']]},
+];
+
+function svg(p, color){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${p}"/></svg>`;
+}
+
+// ---------- Interactive pipeline ----------
+const pipeSvg = document.getElementById('pipeSvg');
+const pipeNodes = document.getElementById('pipeNodes');
+const pipeBase = document.getElementById('pipeBase');
+const pipeGlow = document.getElementById('pipeGlow');
+const pipePulse = document.getElementById('pipePulse');
+const pipeDetail = document.getElementById('pipeDetail');
+const VB_W = 960, VB_H = 120, N = ARCH.length;
+const NODE_W = 132, NODE_H = 78;
+const nodeCX = ARCH.map((_, i) => 40 + i * ((VB_W - 80) / (N - 1)));
+const nodeY = VB_H/2 - NODE_H/2;
+let selectedId = null;
+const healthMap = {}; // gw-path -> bool
+
+function buildPipe(){
+  // connector path (zig through node centers)
+  const pts = nodeCX.map((x) => [x, VB_H/2]);
+  let d = `M ${pts[0][0]} ${pts[0][1]}`;
+  for (let i=1;i<pts.length;i++) d += ` L ${pts[i][0]} ${pts[i][1]}`;
+  pipeBase.setAttribute('d', d);
+  pipeGlow.setAttribute('d', d);
+  // pulse travels along the path
+  pipePulse.style.offsetPath = `path('${d}')`;
+  try { pipePulse.style.offsetPath = `path("${d}")`; } catch(e){}
+  if (pipePulse.animate){
+    const len = pipeBase.getTotalLength ? pipeBase.getTotalLength() : 900;
+    pipePulse.setAttribute('cx', pts[0][0]); pipePulse.setAttribute('cy', pts[0][1]);
+    pipePulse.innerHTML = '';
+  }
+  // nodes
+  pipeNodes.innerHTML = ARCH.map((a, i) => {
+    const cx = nodeCX[i];
+    const bx = cx - NODE_W/2;
+    const sel = selectedId===a.id ? ' sel':'';
+    const hc = a.gw ? (healthMap[a.gw]===false ? ' down' : (healthMap[a.gw]===true ? ' up' : '')) : '';
+    return `<g class="pipe-node${sel}${hc}" data-id="${a.id}" data-i="${i}" transform="translate(${bx},${nodeY})">
+      <rect class="pn-box" width="${NODE_W}" height="${NODE_H}" rx="12"/>
+      <g class="pn-glyph" transform="translate(${NODE_W/2-13},14) scale(1.05)">${svgPath(a.glyph)}</g>
+      <circle class="pn-dot" cx="${NODE_W-16}" cy="16" r="5"/>
+      <text class="pn-nm" x="${NODE_W/2}" y="${NODE_H-26}">${a.nm}</text>
+      <text class="pn-pt" x="${NODE_W/2}" y="${NODE_H-12}">:${a.pt}</text>
+    </g>`;
+  }).join('');
+  pipeNodes.querySelectorAll('.pipe-node').forEach(g => {
+    g.addEventListener('click', () => selectNode(g.dataset.id));
+  });
+}
+
+function svgPath(p){
+  return `<path d="${p}"/>`;
+}
+
+function selectNode(id){
+  selectedId = id;
+  const a = ARCH.find(x => x.id === id);
+  const up = a.gw ? (healthMap[a.gw]===true) : null;
+  pipeDetail.innerHTML = `
+    <span class="pd-tag">${a.layer}</span>
+    <h3 class="pd-h"><span class="pd-dot ${up===false?'down':''}"></span>${a.nm}</h3>
+    <div class="pd-port">port :${a.pt}${a.gw?` · ${up===true?'● live':up===false?'○ down':'● status'}` : ' · UI surface'}</div>
+    <p class="pd-desc">${a.desc}</p>
+    <div class="pd-rows">${a.detail.map(r=>`<div class="pd-row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('')}</div>
+    <a class="pd-cta" href="${a.link}">Open dashboard →</a>`;
+  buildPipe();
+}
+
+// map gateway route prefixes to ARCH gw keys; fetch live health and light nodes
+const GW_ROUTE_TO_KEY = {'/orders':'/orders','/merchants':'/orders','/geo':'/geo','/route':'/geo','/notify':'/notify','/delphi':'/delphi'};
+function loadPipeHealth(){
+  const local = location.hostname==='localhost' || location.hostname==='127.0.0.1' || location.port==='8090';
+  if(!local) return; // hosted demo has no live backend
+  fetch('http://localhost:3000/health').then(r=>r.json()).then(d=>{
+    (d.services||[]).forEach(s=>{ const k=GW_ROUTE_TO_KEY[s.route]; if(k) healthMap[k] = (s.status===200); });
+    buildPipe();
+  }).catch(()=>{});
+}
+
+// build module cards
+const mg = document.getElementById('modGrid');
+MODULES.forEach(m=>{
+  const a = document.createElement('a');
+  a.className='mod'; a.href = m.id==='portal' ? '/wismo/portal' : (m.id==='delphi' ? '/wismo/bi' : '/wismo/');
+  a.innerHTML = `<span class="tag">${m.tag}</span>
+    <div class="chip"><div class="glyph">${svg(m.glyph,'#E8B85D')}</div></div>
+    <h4>${m.name}</h4><p>${m.desc}</p>
+    <div class="open"><span>${m.port==='—'?'UI · portal':'port '+m.port}</span><span class="arrow">→</span></div>`;
+  mg.appendChild(a);
+});
+
+// build + light the pipeline (health comes from gateway)
+buildPipe();
+loadPipeHealth();
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+    document.querySelector('.panel[data-p="'+t.dataset.k+'"]').classList.add('on');
+  });
+});
+
+// ---------- Live track demo (real endpoint /api/track) ----------
+const STAGES = ["WhatsApp Intake","Order Created","Geo Locked","Route Computed","Out for Delivery","Delivered"];
+const form = document.getElementById('trackForm');
+const oid = document.getElementById('oid');
+const btn = document.getElementById('trackBtn');
+const err = document.getElementById('trackErr');
+const tl = document.getElementById('timeline');
+const footCity = document.getElementById('footCity');
+const footEta = document.getElementById('footEta');
+const routeLive = document.getElementById('routeLive');
+const pkg = document.getElementById('pkg');
+
+function render(res){
+  const stages = res.stages || [];
+  tl.innerHTML='';
+  stages.forEach((s,i)=>{
+    const li=document.createElement('li');
+    li.className='tl '+(s.status==='done'?'done':s.status==='active'?'active':'');
+    li.innerHTML=`<span class="ic">${s.status==='done'?'✓':(i+1)}</span>
+      <span class="nm">${s.stage}</span>
+      <span class="ts">${s.ts? s.ts.replace('Z','').slice(11,16) : '—'}</span>`;
+    tl.appendChild(li);
+  });
+  footCity.textContent = res.city + ' · ' + (res.carrier||'SCENTS');
+  footEta.textContent = 'ETA ' + (res.eta_min!=null ? res.eta_min+' min' : '—');
+  // animate route to current progress
+  const prog = (res.current_stage||0)/(STAGES.length-1);
+  const len = 340;
+  routeLive.style.strokeDashoffset = String(len - len*prog);
+  // move pkg along path
+  const at = routeLive.getTotalLength()*prog;
+  const pt = routeLive.getPointAtLength(at);
+  pkg.setAttribute('cx', pt.x); pkg.setAttribute('cy', pt.y);
+}
+
+// 4-step Shopper process, mapped to real WISMO services
+const SIM_STEPS = [
+  {n:1, lb:'Message in',     msg:'WhatsApp → “WMO-4821?”',              svc:'gateway · :3000'},
+  {n:2, lb:'Match order',    msg:'order-service lookup',                svc:'order · :3001'},
+  {n:3, lb:'Resolve location',msg:'geo + route compute',                svc:'geo/route · :3002'},
+  {n:4, lb:'Reply with ETA', msg:'notification service pushes reply',   svc:'notify · :3003'},
+];
+const procSteps = document.getElementById('procSteps');
+const procMsg = document.getElementById('procMsg');
+procSteps.innerHTML = SIM_STEPS.map(s=>`<div class="proc-step" data-n="${s.n}">
+  <span class="ps-num">${s.n}</span><span class="ps-lb">${s.lb}</span></div>`).join('');
+
+const ROUTE_LEN = 340; // matches routeLive dasharray length set in CSS
+function setRoute(prog){
+  prog = Math.max(0, Math.min(1, prog));
+  routeLive.style.strokeDashoffset = String(ROUTE_LEN - ROUTE_LEN*prog);
+  const at = routeLive.getTotalLength()*prog;
+  const pt = routeLive.getPointAtLength(at);
+  pkg.setAttribute('cx', pt.x); pkg.setAttribute('cy', pt.y);
+}
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+async function track(){
+  const id = oid.value.trim();
+  err.textContent='';
+  if(!id){err.textContent='Enter an order ID.';return;}
+  btn.disabled=true; btn.textContent='Tracking…';
+  procMsg.textContent='Starting simulation…';
+  // reset
+  setRoute(0);
+  const stepEls = [...procSteps.querySelectorAll('.proc-step')];
+  stepEls.forEach(e=>e.classList.remove('done','active'));
+
+  // 1) animate the 4-step process, advancing the route + package as it runs
+  for(let i=0;i<SIM_STEPS.length;i++){
+    const s = SIM_STEPS[i];
+    stepEls[i].classList.add('active');
+    procMsg.textContent = `${s.msg}  ·  ${s.svc}`;
+    // route progress: step i fills 0 → (i+1)/4
+    const from = i/4, to = (i+1)/4;
+    const t0 = performance.now(), dur = 620;
+    await new Promise(res=>{
+      function anim(t){
+        const k = Math.min(1,(t-t0)/dur);
+        setRoute(from + (to-from)*k);
+        if(k<1) requestAnimationFrame(anim); else res();
+      }
+      requestAnimationFrame(anim);
+    });
+    stepEls[i].classList.remove('active');
+    stepEls[i].classList.add('done');
+  }
+  procMsg.textContent = 'Order matched — fetching live status…';
+
+  // 2) confirm with the real endpoint, then render authoritative result
+  try{
+    const r = await fetch('/api/track?orderId='+encodeURIComponent(id));
+    const res = await r.json();
+    if(!res.ok){err.textContent=res.error||'Not found.'; procMsg.textContent='Track failed.'; return;}
+    render(res);
+    procMsg.textContent = `Delivered to customer · ${res.carrier||'SCENTS'} · ETA ${res.eta_min!=null?res.eta_min+' min':'—'}`;
+  }catch(e){ err.textContent='Connection issue — is the dashboard host running?'; procMsg.textContent='Offline.'; }
+  finally{ btn.disabled=false; btn.textContent='Track'; }
+}
+form.addEventListener('submit',e=>{e.preventDefault();track();});
+
+// ---------- Live system status (from WISMO gateway :3000) ----------
+const STATUS_LABELS = {
+  '/orders':'Order','/merchants':'Merchant','/geo':'Geo','/route':'Route',
+  '/notify':'Notify','/pixel':'Pixel','/are':'ARE','/bridge':'SCENTS Bridge','/delphi':'Delphi'
+};
+async function loadStatus(){
+  const grid=document.getElementById('statusGrid');
+  const badge=document.getElementById('statusBadge');
+  const text=document.getElementById('statusText');
+  const local = location.hostname==='localhost' || location.hostname==='127.0.0.1' || location.port==='8090';
+  if(!local){
+    grid.innerHTML='<div class="stat-card"><span class="stat-dot up"></span><div class="stat-meta"><div class="nm">Live status</div><div class="pt">run the dashboard host for real-time pulse</div></div></div>';
+    badge.className='badge ok'; badge.textContent='HOSTED DEMO'; text.textContent='live system pulse runs on the self-hosted dashboard';
+    return;
+  }
+  try{
+    const r=await fetch('http://localhost:3000/health');
+    const d=await r.json();
+    const services=d.services||[];
+    grid.innerHTML=services.map(s=>{
+      const up=s.status===200; const label=STATUS_LABELS[s.route]||s.route;
+      return `<div class="stat-card"><span class="stat-dot ${up?'up':'down'}"></span>
+        <div class="stat-meta"><div class="nm">${label}</div><div class="pt">:${s.port} ${up?'● up':'○ down'}</div></div></div>`;
+    }).join('');
+    const up=d.up, total=d.total;
+    if(up===total){ badge.className='badge ok'; badge.textContent='ALL SYSTEMS GO'; text.textContent=`${up}/${total} services live`; }
+    else { badge.className='badge partial'; badge.textContent='DEGRADED'; text.textContent=`${up}/${total} services live`; }
+  }catch(e){
+    grid.innerHTML='<div class="stat-card"><span class="stat-dot down"></span><div class="stat-meta"><div class="nm">Gateway</div><div class="pt">:3000 ○ unreachable</div></div></div>';
+    badge.className='badge partial'; badge.textContent='OFFLINE'; text.textContent='gateway :3000 not reachable';
+  }
+}
+loadStatus();
+setInterval(loadStatus, 15000);
+
+// initial demo render
+track();
+</script>
+</body>
+</html>

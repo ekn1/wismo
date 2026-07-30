@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>WISMO BI</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#F5F6F8;--card:#FFFFFF;--text:#0F1724;--text2:#6B7280;--border:#E6E8ED;--muted:#F2F4F7;
+    --navy:#002277;--blue:#0033A0;--green:#15803D;--amber:#B45309;--red:#B91C1C;--indigo:#1E40AF;
+    --r-lg:22px;--shadow:0 2px 12px rgba(0,0,0,0.06);--shadow-lg:0 10px 30px rgba(0,0,0,0.09);
+  }
+  html,body{height:100%;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .app{display:flex;flex-direction:column;height:100%}
+  .header{background:rgba(255,255,255,0.82);backdrop-filter:blur(24px) saturate(200%);border-bottom:0.5px solid rgba(0,0,0,0.05)}
+  .header h1{font-size:26px;font-weight:900;color:var(--navy);letter-spacing:-0.3px}
+  .header .sub{font-size:13px;color:var(--text2);font-weight:700;margin-top:4px}
+  .scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:18px 18px 24px;scroll-behavior:smooth}
+  .section{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.6px;color:var(--navy);margin:24px 4px 10px}
+  .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px}
+  .kpi{background:linear-gradient(180deg,var(--card) 0%,#FAFBFF 100%);border-radius:var(--r-lg);padding:18px 16px;box-shadow:var(--shadow);text-align:center;border:1px solid var(--border)}
+  .kpi-label{font-size:11px;color:var(--text2);font-weight:800;text-transform:uppercase;letter-spacing:0.9px;margin-top:2px}
+  .kpi-value{font-size:28px;font-weight:900;margin-top:6px;letter-spacing:-0.7px;color:var(--navy)}
+  .kpi-delta{font-size:13px;font-weight:700;margin-top:3px;color:var(--text2)}
+  .card{background:var(--card);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow);margin-bottom:14px;border:1px solid var(--border)}
+  .title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .tab{padding:7px 12px;border-radius:20px;font-size:12px;font-weight:700;color:var(--text2);background:white;border:1px solid var(--border);cursor:pointer}
+  .tab.active{background:var(--navy);color:white;border-color:var(--navy)}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:1px;padding:8px 8px;border-bottom:0.5px solid var(--border);background:#F8F9FB}
+  td{padding:10px 8px;border-bottom:0.5px solid var(--border);color:var(--text);font-weight:500}
+  tr:last-child td{border-bottom:none}
+  .badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800}
+  .b-green{background:#DCFCE7;color:var(--green)}.b-blue{background:#DBEAFE;color:var(--indigo)}.b-amber{background:#FEF3C7;color:var(--amber)}.b-red{background:#FEE2E2;color:var(--red)}.b-gray{background:#F3F4F6;color:#4B5563}
+  .bar-wrap{height:10px;background:#E6E8ED;border-radius:6px;overflow:hidden;margin-top:8px}
+  .bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--navy));border-radius:6px}
+  .empty{text-align:center;padding:24px 10px;color:var(--text2);font-size:13px}
+  .bottom{padding:12px 18px calc(12px + env(safe-area-inset-bottom, 16px));border-top:0.5px solid rgba(0,0,0,0.07);background:rgba(255,255,255,0.82);backdrop-filter:blur(24px) saturate(200%);display:flex;gap:12px;flex-wrap:wrap}
+  .btn{background:var(--blue);color:white;border:none;border-radius:18px;padding:13px 18px;font-size:13px;font-weight:800;cursor:pointer}
+  .btn:active{opacity:.78;transform:scale(0.97)}
+  .btn-secondary{background:#E6E8ED;color:var(--text)}
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="header" style="padding:14px 22px 10px">
+      <h1>WISMO BI</h1>
+      <div class="sub">Circuit · Tickets · Reroutes · Queue · Cancellations · Tracking</div>
+    </div>
+    <div class="scroll">
+      <div class="section">Overview</div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Circuit</div><div class="kpi-value" id="kpiCircuit">--</div><div class="kpi-delta" id="kpiCircuitState">Live</div></div>
+        <div class="kpi"><div class="kpi-label">Requests</div><div class="kpi-value" id="kpiRequests">--</div><div class="kpi-delta">Total</div></div>
+        <div class="kpi"><div class="kpi-label">Circuit breaks</div><div class="kpi-value" id="kpiBreaks">--</div><div class="kpi-delta">Impact</div></div>
+        <div class="kpi"><div class="kpi-label">Queue depth</div><div class="kpi-value" id="kpiQueue">--</div><div class="kpi-delta">Live</div></div>
+      </div>
+
+      <div class="card">
+        <div class="title">Intelligence</div>
+        <div class="tabs">
+          <button class="tab active" data-key="circuit">Circuit</button>
+          <button class="tab" data-key="ticket_funnel">Tickets</button>
+          <button class="tab" data-key="reroutes">Reroutes</button>
+          <button class="tab" data-key="queue">Queue</button>
+          <button class="tab" data-key="tracking">Tracking</button>
+          <button class="tab" data-key="cancellations">Cancellations</button>
+        </div>
+        <div id="chartArea"><div class="empty">Loading...</div></div>
+      </div>
+
+      <div class="section">Details / real data</div>
+      <div class="card">
+        <div class="title">Latency and queue state</div>
+        <div id="queueDetail" class="empty">No data yet.</div>
+      </div>
+      <div class="card">
+        <div class="title">Coverage index</div>
+        <div id="trackingDetail" class="empty">No data yet.</div>
+      </div>
+
+      <div style="height:18px"></div>
+    </div>
+    <div class="bottom">
+      <button class="btn" id="refreshBI">Refresh</button>
+      <button class="btn btn-secondary" id="openDashboard">Open WISMO dashboard</button>
+    </div>
+  </div>
+
+  <script>
+  const API='/bi/';
+  const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
+  const fmt=n=>Number(n||0).toLocaleString();
+
+  async function get(url){try{const r=await fetch(url);return await r.json()}catch{return null}}
+  function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v}
+
+  function renderMetricsTable(title, rows){
+    if(!rows||!rows.length) return `<div class="empty">No records.</div>`;
+    const max = Math.max(...rows.map(r=>Number(r.value||r.count||0)||0),1);
+    return `<table><thead><tr><th>Metric</th><th>Value</th><th>Share</th></tr></thead><tbody>${rows.map(r=>`<tr><td style="font-weight:700">${r.name||r.reason||r.state||r.platform||'--'}</td><td>${fmt(r.value||r.count||r.depth||0)}</td><td><div class="bar-wrap"><div class="bar" style="width:${(Number(r.value||r.count||r.depth||0)/max)*100}%"></div></div></td></tr>`).join('')}</tbody></table>`;
+  }
+
+  function renderCircuits(m){
+    setText('kpiCircuit', (m?.data?.circuit)||(m?.circuit)||'--');
+    setText('kpiRequests', fmt((m?.data?.requests)||(m?.requests)||0));
+    setText('kpiBreaks', fmt((m?.data?.circuitBreaks)||(m?.circuitBreaks)||0));
+    const rows = [
+      { name:'Circuit', value: (m?.data?.circuit)==='OPEN'?1:0 },
+      { name:'Requests', value:(m?.data?.requests)||0 },
+      { name:'Circuit breaks', value:(m?.data?.circuitBreaks)||0 },
+      { name:'Invalid payloads', value:(m?.data?.invalidPayloads)||0 },
+    ];
+    return renderMetricsTable('Circuit', rows);
+  }
+
+  function renderTickets(m){
+    setText('kpiCircuitState', 'Funnel');
+    const statusData = m?.data;
+    const created = statusData?.tickets?.created;
+    const cancelled = statusData?.tickets?.cancelled ?? 0;
+    const migrated = statusData?.tickets?.migrated ?? 0;
+    const total = Number(created||0) + Number(cancelled||0) + Number(migrated||0);
+    const rows = [
+      { name:'created', value: created ?? 0 },
+      { name:'cancelled', value: cancelled },
+      { name:'migrated', value: migrated },
+    ];
+    return `<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">Total tickets touched: ${fmt(total)}</div>` + renderMetricsTable('Ticket states', rows);
+  }
+
+  function renderReroutes(m){
+    const rows = [
+      {name:'accepted', value:(m?.data?.reroutes?.accepted)??0},
+      {name:'failed', value:(m?.data?.reroutes?.failed)??0},
+      {name:'queued', value:(m?.data?.reroutes?.queued)??0},
+    ];
+    return renderMetricsTable('Reroute outcomes', rows);
+  }
+
+  async function renderQueue(){
+    const detail = document.getElementById('queueDetail');
+    const tracked = await get(API+'track?entity_id=realtime&status=ok');
+    const latencyMs = (tracked?.data?.latency_ms) ?? (tracked?.latency_ms) ?? null;
+    const q = await get(API+'queue/status?token=none');
+    const notFound = q?.data?.error === 'token_not_found';
+    const rows = notFound ? [{name:'queue', value:'status endpoint ok', depth: 0}] : (q?.data?.items||[]).map(i=>({name:`token:${i.token}`, value: String(i.state), depth: 1}));
+    const latencySection = latencyMs!=null ? `<div style="margin-top:10px"><table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>${[{name:'tracking.latency_ms', value:Math.round(latencyMs)},{name:'tracking.status',value:(tracked?.data?.status||tracked?.status||'--')}].map(r=>`<tr><td style="font-weight:700">${r.name}</td><td>${fmt(r.value)}</td></tr>`).join('')}</tbody></table></div>` : '';
+    detail.innerHTML = latencySection + renderMetricsTable('Queue', rows);
+  }
+
+  function renderTracking(){
+    const el = document.getElementById('trackingDetail');
+    el.innerHTML = `<table><thead><tr><th>Check</th><th>Value</th></tr></thead><tbody><tr><td style="font-weight:700">Live tracking proxy</td><td>Available through backend /track endpoint</td></tr></tbody></table>`;
+  }
+
+  async function renderCancellations(){
+    const q = await get(API+'queue/depth');
+    const items = [];
+    if (Array.isArray(q?.data?.items)) {
+      for (const item of q?.data?.items || []) {
+        const state = item.state;
+        if (state !== 'queued' && state !== 'open') {
+          items.push({ reason: state || 'complete', count: 1 });
+        }
+      }
+    }
+    const el = document.getElementById('chartArea');
+    el.innerHTML = renderMetricsTable('Completed items from queue snapshot', items.length ? items : [{reason:'none', count: 0}]);
+  }
+
+  async function loadBI(key){
+    const health = await get(API+'healthz');
+    const statusData = await get(API+'api/status');
+
+    const m = {
+      data: {
+        ...(health?.data || {}),
+        circuit: ((health?.data && health.data.ready) ? 'OK' : 'UNKNOWN'),
+        requests: (health?.data?.metrics?.requests) || 0,
+        circuitBreaks: (health?.data?.metrics?.circuitBreaks) || 0,
+        invalidPayloads: (health?.data?.metrics?.invalidPayloads) || 0,
+      },
+      status: statusData?.data,
+    };
+
+    setText('kpiCircuit', (m?.data?.circuit)||'--');
+    setText('kpiRequests', fmt((m?.data?.requests)||0));
+    setText('kpiBreaks', fmt((m?.data?.circuitBreaks)||0));
+
+    if(key==='circuit') document.getElementById('chartArea').innerHTML = renderCircuits(m);
+    else if(key==='ticket_funnel') document.getElementById('chartArea').innerHTML = renderTickets(m);
+    else if(key==='reroutes') document.getElementById('chartArea').innerHTML = renderReroutes(m);
+    else if(key==='queue'){
+      setText('kpiQueue','...');
+      const q = await get(API+'queue/status?token=__scents_dashboard__');
+      const depth = q?.data?.error === 'token_not_found' ? 0 : 1;
+      setText('kpiQueue', fmt(depth));
+      document.getElementById('chartArea').innerHTML = renderMetricsTable('Queue state', [{name: q?.data?.error === 'token_not_found' ? 'queue-empty' : (q?.data?.state||'unknown'), value: depth, depth}]);
+      await renderQueue();
+    }
+    else if(key==='tracking'){ renderTracking(); }
+    else if(key==='cancellations') await renderCancellations();
+  }
+
+  (function init(){
+    const key = new URLSearchParams(location.search).get('tab') || 'circuit';
+    $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.key===key));
+    loadBI(key);
+
+    $$('#chartArea').addEventListener('click',(e)=>{
+      const tab = e.target.closest('.tab'); if(!tab) return;
+      $$('.tab').forEach(t=>t.classList.toggle('active', t===tab));
+      history.replaceState(null,'',`${location.pathname}?tab=${tab.dataset.key}`);
+      loadBI(tab.dataset.key);
+    });
+    document.getElementById('refreshBI').addEventListener('click',()=>loadBI(document.querySelector('.tab.active')?.dataset.key||'circuit'));
+    document.getElementById('openDashboard').addEventListener('click',()=>location.href='/');
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SCENTS × WISMO · Investor Showcase</title>
+<style>
+  :root{
+    --bg:#0A1A2F; --pane:#0E1B2E; --panel:#0E1B2E; --panel-2:#0F2236;
+    --navy:#0A1A2F; --navy-2:#0B2E4F;
+    --teal:#0E7490; --teal-dk:#0B5563; --teal-lt:#19A0BF;
+    --amber:#E8B85D; --amber-dk:#C99A3B;
+    --ink:#EAF1F7; --muted:#8FA3B8; --muted-2:#6B7E93;
+    --line:#1C2E44; --line-2:#27425E;
+    --green:#28C840; --green-lt:rgba(40,200,64,.14); --red:#FF5F57; --orange:#F59E0B; --orange-lt:rgba(245,158,11,.14);
+    --ui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --r-lg:16px; --r-xl:22px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  /* nav */
+  nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);background:rgba(10,26,47,.82);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:1120px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em}
+  .brand svg{width:26px;height:26px}
+  .nav-links{display:flex;gap:22px;font-size:14px;color:var(--muted)}
+  .nav-links a:hover{color:var(--ink)}
+  @media(max-width:720px){.nav-links{display:none}}
+  /* hero */
+  .hero{padding:74px 0 50px;background:
+    radial-gradient(900px 380px at 78% -8%, rgba(14,116,144,.30), transparent 60%),
+    radial-gradient(700px 320px at 8% 4%, rgba(201,154,59,.16), transparent 55%)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--amber);text-transform:uppercase;margin:0 0 14px}
+  .hero h1{font-size:clamp(34px,5.4vw,58px);line-height:1.03;letter-spacing:-.03em;margin:0 0 18px;max-width:15ch}
+  .hero h1 .accent{color:var(--teal-lt)}
+  .hero p.lead{color:var(--muted);font-size:18px;max-width:62ch;margin:0 0 28px;line-height:1.55}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:15px;padding:14px 22px;border-radius:13px;transition:.16s}
+  .btn-pri{background:linear-gradient(180deg,var(--teal),var(--teal-dk));color:#fff;border:1px solid var(--teal-lt)}
+  .btn-pri:hover{filter:brightness(1.08)}
+  .btn-ghost{background:var(--navy);border:1px solid var(--line-2);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--amber);color:var(--amber)}
+  /* metrics */
+  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:8px 0 60px}
+  .metric{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);border-radius:var(--r-lg);padding:20px}
+  .metric .v{font-size:30px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(90deg,var(--teal-lt),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .metric .k{color:var(--muted);font-size:13px;margin-top:4px}
+  @media(max-width:760px){.metrics{grid-template-columns:repeat(2,1fr)}}
+  /* section */
+  .block{padding:30px 0 10px}
+  .s-head{max-width:62ch;margin-bottom:22px}
+  .s-ey{font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--amber);text-transform:uppercase;margin:0 0 8px}
+  .s-h{font-size:clamp(26px,3.6vw,36px);letter-spacing:-.02em;margin:0 0 10px}
+  .s-sub{color:var(--muted);font-size:16px;margin:0;line-height:1.55}
+  /* pipeline (reused interactive idea, read-only here) */
+  .pipe{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;align-items:stretch}
+  .pipe-stage{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);border-radius:var(--r-lg);padding:20px 16px;display:flex;align-items:center}
+  #pipeSvg{width:100%;height:auto}
+  .pn-box{fill:var(--navy-2);stroke:var(--line-2);stroke-width:1.5}
+  .pn-glyph{stroke:var(--teal-lt);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .pn-nm{fill:var(--ink);font-size:12px;font-weight:600;text-anchor:middle;font-family:var(--ui)}
+  .pn-pt{fill:var(--teal-lt);font-size:9.5px;text-anchor:middle;font-family:var(--mono)}
+  .pn-dot{fill:var(--green)}
+  #pipePulse{fill:var(--amber);filter:drop-shadow(0 0 5px rgba(232,184,93,.8));animation:pulseMove 5.5s linear infinite}
+  #pipeGlow{stroke:var(--teal);stroke-width:3;fill:none;stroke-linecap:round;animation:glowFlow 5.5s linear infinite}
+  #pipeBase{stroke:var(--line-2);stroke-width:2.5;fill:none;stroke-dasharray:3 6}
+  @keyframes pulseMove{from{stroke-dashoffset:0}to{stroke-dashoffset:-960}}
+  @keyframes glowFlow{from{stroke-dashoffset:0}to{stroke-dashoffset:-960}}
+  .pipe-detail{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);border-radius:var(--r-lg);padding:22px}
+  .pipe-detail h3{margin:0 0 6px;font-size:20px;letter-spacing:-.01em}
+  .pipe-detail p{color:var(--muted);font-size:14.5px;line-height:1.55;margin:0}
+  @media(max-width:760px){.pipe{grid-template-columns:1fr}}
+  /* live status */
+  .status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat-card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);border-radius:var(--r-lg);padding:15px 16px;display:flex;align-items:center;gap:12px}
+  .stat-dot{width:11px;height:11px;border-radius:50%;background:var(--muted-2)}
+  .stat-dot.up{background:var(--green);animation:pulseG 2s infinite}
+  .stat-dot.down{background:var(--red)}
+  @keyframes pulseG{0%{box-shadow:0 0 0 0 rgba(40,200,64,.45)}70%{box-shadow:0 0 0 7px rgba(40,200,64,0)}100%{box-shadow:0 0 0 0 rgba(40,200,64,0)}}
+  .stat-meta .nm{font-size:13.5px;font-weight:600}
+  .stat-meta .pt{font-family:var(--mono);font-size:11px;color:var(--muted-2)}
+  .status-summary{display:flex;align-items:center;gap:12px;margin-top:16px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .status-summary .badge{font-weight:700;padding:4px 11px;border-radius:20px}
+  .status-summary .badge.ok{background:var(--green-lt);color:var(--green)}
+  .status-summary .badge.partial{background:var(--orange-lt);color:var(--orange)}
+  /* surfaces cards */
+  .surf{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
+  .surf .c{position:relative;background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);border-radius:var(--r-lg);padding:22px 20px;overflow:hidden;transition:.18s}
+  .surf .c::before{content:"";position:absolute;left:0;top:0;height:3px;width:100%;background:linear-gradient(90deg,var(--teal),var(--amber));transform:scaleX(.35);transform-origin:left;transition:.22s}
+  .surf .c:hover::before{transform:scaleX(1)}
+  .surf .c h4{margin:0 0 8px;font-size:18px}
+  .surf .c p{margin:0 0 14px;color:var(--muted);font-size:14px;line-height:1.5}
+  .surf .c .go{display:inline-flex;align-items:center;gap:7px;color:var(--teal-lt);font-weight:600;font-size:13.5px}
+  .surf .c:hover{border-color:var(--teal)}
+  @media(max-width:760px){.surf{grid-template-columns:1fr}}
+  /* final */
+  .final{background:linear-gradient(135deg,rgba(14,116,144,.22),rgba(201,154,59,.10));border:1px solid var(--line-2);border-radius:var(--r-xl);padding:46px;text-align:center;margin:46px 0 30px}
+  .final h2{font-size:clamp(26px,3.6vw,38px);margin:0 0 12px;letter-spacing:-.02em}
+  .final p{color:var(--muted);max-width:540px;margin:0 auto 24px}
+  .final .hero-cta{justify-content:center}
+  footer{border-top:1px solid var(--line);padding:28px 0 46px;color:var(--muted-2);font-family:var(--mono);font-size:12px}
+  .foot-in{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+  .foot-in .lg{display:flex;align-items:center;gap:9px;color:var(--muted)}
+  .foot-in .lg svg{width:24px;height:24px}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-in">
+    <span class="brand">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><path d="M20 96 C40 60 56 100 74 56 S96 26 100 24" stroke="#0E7490" stroke-width="3" stroke-opacity=".35" stroke-linecap="round" fill="none"/><path d="M100 24 C112 24 112 8 100 8 C88 8 88 24 100 24 Z" fill="#0E7490"/><circle cx="100" cy="18" r="4" fill="#E8B85D"/><circle cx="20" cy="96" r="9" fill="#0E7490"/><circle cx="20" cy="96" r="3.5" fill="#E8B85D"/></svg>
+      SCENTS × WISMO
+    </span>
+    <div class="nav-links">
+      <a href="#pipeline">Pipeline</a>
+      <a href="#status">Live status</a>
+      <a href="#surfaces">Surfaces</a>
+      <a href="/wismo/landing">Full story →</a>
+    </div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Investor Showcase · 2026</p>
+    <h1>One live thread from <span class="accent">WhatsApp ping</span> to doorstep.</h1>
+    <p class="lead">SCENTS × WISMO turns scattered delivery chaos into a single observable system — for the shopper who asks “where’s my order?”, the operator who runs the fleet, and the business that needs the truth in real time. This is the working stack, live.</p>
+    <div class="hero-cta">
+      <a class="btn btn-pri" href="#status">See the stack live →</a>
+      <a class="btn btn-ghost" href="/wismo/landing">Open the landing</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="metrics">
+    <div class="metric"><div class="v">9</div><div class="k">live services</div></div>
+    <div class="metric"><div class="v">6</div><div class="k">modules, one thread</div></div>
+    <div class="metric"><div class="v">3</div><div class="k">seats: shopper · ops · biz</div></div>
+    <div class="metric"><div class="v">0</div><div class="k">call-center guesswork</div></div>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<section class="block" id="pipeline">
+  <div class="wrap">
+    <div class="s-head">
+      <p class="s-ey">How it fits together</p>
+      <h2 class="s-h">A clean, observable pipeline</h2>
+      <p class="s-sub">Every request enters at the gateway, fans out to order / geo / route, and surfaces through notifications, the portal, and BI. The pulse below is the live request path.</p>
+    </div>
+    <div class="pipe">
+      <div class="pipe-stage">
+        <svg id="pipeSvg" viewBox="0 0 960 120" preserveAspectRatio="xMidYMid meet" role="img" aria-label="WISMO pipeline">
+          <path id="pipeBase" d=""/>
+          <path id="pipeGlow" d=""/>
+          <circle id="pipePulse" r="5"/>
+          <g id="pipeNodes"></g>
+        </svg>
+      </div>
+      <div class="pipe-detail" id="pipeDetail">
+        <h3>The whole stack, one flow</h3>
+        <p>Gateway → Order → Geo/Route → Notify → Portal → Delphi BI. Click any node in the full landing to inspect it; health is read live from the running services.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE STATUS -->
+<section class="block" id="status">
+  <div class="wrap">
+    <div class="s-head">
+      <p class="s-ey">Live system status</p>
+      <h2 class="s-h">The whole stack, one pulse</h2>
+      <p class="s-sub">Fetched in real time from the WISMO gateway — every service, every port, right now.</p>
+    </div>
+    <div class="status-grid" id="statusGrid"></div>
+    <div class="status-summary">
+      <span class="badge" id="statusBadge">…</span>
+      <span id="statusText">checking services…</span>
+    </div>
+  </div>
+</section>
+
+<!-- SURFACES -->
+<section class="block" id="surfaces">
+  <div class="wrap">
+    <div class="s-head">
+      <p class="s-ey">Three surfaces, one truth</p>
+      <h2 class="s-h">Built for the people who use it</h2>
+    </div>
+    <div class="surf">
+      <div class="c">
+        <h4>WISMO Landing</h4>
+        <p>The story page — interactive pipeline, live track demo, and the modules behind the system.</p>
+        <a class="go" href="/wismo/landing">Open →</a>
+      </div>
+      <div class="c">
+        <h4>Rider App</h4>
+        <p>The field side — turn-by-turn delivery, scan-to-confirm, and live reroute pushes from Geo / Route.</p>
+        <a class="go" href="/wismo/rider">Open →</a>
+      </div>
+      <div class="c">
+        <h4>Operator Console</h4>
+        <p>The control room — orders, riders, tracking, and intake in one branded workspace.</p>
+        <a class="go" href="/wismo/">Open →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="final">
+    <h2>One system. Every order accounted for.</h2>
+    <p>SCENTS × WISMO gives customers certainty, operators control, and the business a single source of delivery truth — demonstrably live.</p>
+    <div class="hero-cta">
+      <a class="btn btn-pri" href="#status">Check the live stack ↑</a>
+      <a class="btn btn-ghost" href="/wismo/landing">Explore the landing</a>
+    </div>
+  </div>
+</div>
+
+<footer><div class="wrap foot-in">
+  <span class="lg">
+    <svg viewBox="0 0 120 120" aria-hidden="true"><path d="M20 96 C40 60 56 100 74 56 S96 26 100 24" stroke="#0E7490" stroke-width="3" stroke-opacity=".35" stroke-linecap="round" fill="none"/><path d="M100 24 C112 24 112 8 100 8 C88 8 88 24 100 24 Z" fill="#0E7490"/><circle cx="100" cy="18" r="4" fill="#E8B85D"/><circle cx="20" cy="96" r="9" fill="#0E7490"/><circle cx="20" cy="96" r="3.5" fill="#E8B85D"/></svg>
+    SCENTS × WISMO
+  </span>
+  <span>Investor showcase · data is a live demo feed, not production</span>
+</div></footer>
+
+<script>
+// pipeline (read-only render)
+const ARCH=[
+  {nm:'Gateway',pt:'3000'},{nm:'Order',pt:'3001'},{nm:'Geo/Route',pt:'3002'},
+  {nm:'Notify',pt:'3003'},{nm:'Portal',pt:'UI'},{nm:'Delphi',pt:'5025'}
+];
+const VB_W=960,VB_H=120,N=ARCH.length,NODE_W=132,NODE_H=78;
+const nodeCX=ARCH.map((_,i)=>40+i*((VB_W-80)/(N-1)));
+const nodeY=VB_H/2-NODE_H/2;
+const pts=nodeCX.map(x=>[x,VB_H/2]);
+let d='M '+pts[0][0]+' '+pts[0][1];
+for(let i=1;i<pts.length;i++)d+=' L '+pts[i][0]+' '+pts[i][1];
+const base=document.getElementById('pipeBase'),glow=document.getElementById('pipeGlow'),pulse=document.getElementById('pipePulse'),nodes=document.getElementById('pipeNodes');
+base.setAttribute('d',d);glow.setAttribute('d',d);
+pulse.setAttribute('cx',pts[0][0]);pulse.setAttribute('cy',pts[0][1]);
+nodes.innerHTML=ARCH.map((a,i)=>{const cx=nodeCX[i],bx=cx-NODE_W/2;
+  return `<g transform="translate(${bx},${nodeY})">
+    <rect class="pn-box" width="${NODE_W}" height="${NODE_H}" rx="12"/>
+    <circle class="pn-dot" cx="${NODE_W-16}" cy="16" r="5"/>
+    <text class="pn-nm" x="${NODE_W/2}" y="${NODE_H-26}">${a.nm}</text>
+    <text class="pn-pt" x="${NODE_W/2}" y="${NODE_H-12}">:${a.pt}</text>
+  </g>`;}).join('');
+
+// live status (reuse gateway)
+const LABELS={'/orders':'Order','/merchants':'Merchant','/geo':'Geo','/route':'Route','/notify':'Notify','/pixel':'Pixel','/are':'ARE','/bridge':'SCENTS Bridge','/delphi':'Delphi'};
+function loadStatus(){
+  const grid=document.getElementById('statusGrid'),badge=document.getElementById('statusBadge'),text=document.getElementById('statusText');
+  const local=location.hostname==='localhost'||location.hostname==='127.0.0.1'||location.port==='8090';
+  if(!local){
+    grid.innerHTML='<div class="stat-card"><span class="stat-dot up"></span><div class="stat-meta"><div class="nm">Live status</div><div class="pt">run the dashboard host for real-time pulse</div></div></div>';
+    badge.className='badge ok';badge.textContent='HOSTED DEMO';text.textContent='live system pulse runs on the self-hosted dashboard';return;
+  }
+  fetch('http://localhost:3000/health').then(r=>r.json()).then(d=>{
+    grid.innerHTML=(d.services||[]).map(s=>{const up=s.status===200;const l=LABELS[s.route]||s.route;
+      return `<div class="stat-card"><span class="stat-dot ${up?'up':'down'}"></span><div class="stat-meta"><div class="nm">${l}</div><div class="pt">:${s.port} ${up?'● up':'○ down'}</div></div></div>`;}).join('');
+    if(d.up===d.total){badge.className='badge ok';badge.textContent='ALL SYSTEMS GO';text.textContent=d.up+'/'+d.total+' services live';}
+    else{badge.className='badge partial';badge.textContent='DEGRADED';text.textContent=d.up+'/'+d.total+' services live';}
+  }).catch(()=>{badge.className='badge partial';badge.textContent='OFFLINE';text.textContent='gateway :3000 not reachable';});
+}
+loadStatus();setInterval(loadStatus,15000);
+</script>
+</body>
+</html>
