@@ -195,10 +195,41 @@
 
   @media(max-width:760px){.console{grid-template-columns:1fr}.side{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line-2)}.side .hd,.side .bottom{display:none}.nav{border-left:0;border-bottom:3px solid transparent;white-space:nowrap}.nav.active{border-left:0;border-bottom-color:var(--teal)}.kpis{grid-template-columns:repeat(2,1fr)}}
   @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+  .login-overlay{position:fixed;inset:0;z-index:100;background:rgba(10,26,47,.92);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center}
+  .login-card{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line-2);border-radius:var(--r-xl);padding:22px;width:100%;max-width:380px;box-shadow:0 30px 70px rgba(0,0,0,.45)}
+  .login-overlay.hidden{display:none}
 </style>
 </head>
 <body><div class="bg"></div>
 <div class="shell">
+  <div class="login-overlay" id="loginOverlay">
+    <div class="login-card">
+      <div class="brand" style="margin-bottom:18px">
+        <svg viewBox="0 0 120 120" aria-label="WISMO" style="width:36px;height:36px"><defs><linearGradient id="lg2" x1="18" y1="18" x2="102" y2="102" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0B5563"/><stop offset="1" stop-color="#0E7490"/></linearGradient></defs>
+          <path d="M20 96 C40 60 56 100 74 56 S96 26 100 24" stroke="#0E7490" stroke-width="3" stroke-opacity=".35" stroke-linecap="round" fill="none"/>
+          <path d="M100 24 C112 24 112 8 100 8 C88 8 88 24 100 24 Z" fill="url(#lg2)"/>
+          <circle cx="100" cy="18" r="4" fill="#E8B85D"/><circle cx="20" cy="96" r="9" fill="url(#lg2)"/><circle cx="20" cy="96" r="3.5" fill="#E8B85D"/>
+          <circle cx="47" cy="78" r="2.5" fill="#0E7490" fill-opacity=".5"/><circle cx="74" cy="56" r="2.5" fill="#0E7490" fill-opacity=".5"/></svg>
+        <span class="t" style="font-size:18px;font-weight:700;letter-spacing:.01em">WI<b>S</b>MO</span>
+      </div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Sign in for demo access. Use one of the demo accounts below.</div>
+      <div class="row" style="gap:10px">
+        <div class="field"><label>Username</label><input id="loginUser" placeholder="demo@wismo.ke"></div>
+        <div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="password"></div>
+      </div>
+      <div class="row" style="gap:10px;margin-top:10px">
+        <button class="btn" id="loginBtn" style="flex:1">Sign in</button>
+        <button class="btn ghost" id="loginDemo" style="flex:1">Use demo account</button>
+      </div>
+      <div id="loginError" style="color:var(--red);font-size:12px;margin-top:10px;min-height:16px"></div>
+      <div style="margin-top:14px;font-size:11px;color:var(--muted-2);line-height:1.55">
+        Demo credentials:<br>
+        • merchant@wismo.ke / merchant123 — Orders, routes, intake, OSINT<br>
+        • rider@wismo.ke / rider123 — Rider console and queue<br>
+        • admin@wismo.ke / admin123 — Full demo access
+      </div>
+    </div>
+  </div>
   <div class="top">
     <div class="brand">
       <svg viewBox="0 0 120 120" aria-label="WISMO"><defs><linearGradient id="lg" x1="18" y1="18" x2="102" y2="102" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0B5563"/><stop offset="1" stop-color="#0E7490"/></linearGradient></defs>
@@ -230,7 +261,19 @@
       <div class="nav" data-view="intake">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Intake
       </div>
-      <div class="bottom">● gateway 3000<br>● order 3001 · geo 3002<br>● notify 3003 · pixel 3007</div>
+      <div class="nav" data-view="osint">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>OSINT
+      </div>
+      <div class="nav" data-view="explain">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Explain
+      </div>
+      <div class="nav" data-view="privacy">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Privacy
+      </div>
+      <div class="nav" data-view="monitoring">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Alerts
+      </div>
+      <div class="bottom">● gateway 3000<br>● order 3001 · geo 3002<br>● notify 3003 · pixel 3007<br>● osint · explain · privacy</div>
     </aside>
 
     <div class="main">
@@ -353,6 +396,84 @@
           </div>
         </section>
 
+        <!-- OSINT -->
+        <section id="view-osint" class="view">
+          <div class="kpis">
+            <div class="kpi"><div class="l">Active sources</div><div class="v" id="osintSources">9</div><div class="s nu">WISMO</div></div>
+            <div class="kpi"><div class="l">Signals today</div><div class="v" id="osintSignals">0</div><div class="s up">Live</div></div>
+            <div class="kpi"><div class="l">Fraud flags</div><div class="v" id="osintFraud">0</div><div class="s dn">Watch</div></div>
+            <div class="kpi"><div class="l">Onboarding checks</div><div class="v" id="osintOnboard">0</div><div class="s nu">Queue</div></div>
+          </div>
+          <div class="card">
+            <h3>Source health</h3>
+            <div class="tw"><table><thead><tr><th>Source</th><th>Vertical</th><th>Status</th><th>Last run</th></tr></thead><tbody id="osintSourceBody"></tbody></table></div>
+          </div>
+          <div class="card">
+            <h3>Recent signals</h3>
+            <div class="tw"><table><thead><tr><th>ID</th><th>Type</th><th>Entity</th><th>Confidence</th><th>Time</th></tr></thead><tbody id="osintSignalBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- EXPLAIN -->
+        <section id="view-explain" class="view">
+          <div class="card">
+            <h3>Prediction explainability</h3>
+            <div class="row">
+              <div class="field"><label>Prediction ID</label><input id="explainPredictionId" value="PRED-001"></div>
+              <div class="field"><button id="explainLoad" class="btn">Load trace</button></div>
+            </div>
+          </div>
+          <div class="card" id="explainCard" style="display:none">
+            <div style="font-size:11px;font-weight:800;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Evidence chain</div>
+            <div class="tw"><table><thead><tr><th>Signal</th><th>Source</th><th>Admiralty</th><th>Credibility</th></tr></thead><tbody id="explainBody"></tbody></table></div>
+            <div style="font-size:11px;font-weight:800;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px">Reasoning trace</div>
+            <div id="explainTrace" style="font-size:12px;color:var(--ink);line-height:1.6"></div>
+            <div style="font-size:11px;font-weight:800;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px">Dissent</div>
+            <div id="explainDissent" style="font-size:12px;color:var(--orange)"></div>
+          </div>
+        </section>
+
+        <!-- PRIVACY -->
+        <section id="view-privacy" class="view">
+          <div class="card">
+            <h3>Fusion query privacy gate</h3>
+            <div class="row">
+              <div class="field"><label>Domains</label><input id="privacyDomains" value="fmcg_distributor,logistics"></div>
+              <div class="field"><label>Requested by</label><input id="privacyRequestedBy" value="analyst-1"></div>
+              <div class="field"><button id="privacyCheck" class="btn">Evaluate query</button></div>
+            </div>
+          </div>
+          <div class="card" id="privacyCard" style="display:none">
+            <div style="font-size:11px;font-weight:800;color:var(--muted-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Result</div>
+            <div id="privacyResult" style="font-size:13px"></div>
+          </div>
+          <div class="card">
+            <h3>Domain registry</h3>
+            <div class="tw"><table><thead><tr><th>Domain</th><th>Sensitivity</th><th>Fusion</th><th>Partners</th></tr></thead><tbody id="privacyDomainBody"></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- MONITORING -->
+        <section id="view-monitoring" class="view">
+          <div class="kpis">
+            <div class="kpi"><div class="l">Watched entities</div><div class="v" id="monWatchCount">0</div><div class="s nu">Active</div></div>
+            <div class="kpi"><div class="l">Unacknowledged alerts</div><div class="v" id="monAlertCount">0</div><div class="s dn">Open</div></div>
+          </div>
+          <div class="card">
+            <h3>Add watch</h3>
+            <div class="row">
+              <div class="field"><label>Entity ID</label><input id="monEntityId" value="ENT-001"></div>
+              <div class="field"><label>Metric</label><input id="monMetric" value="distress_score"></div>
+              <div class="field"><label>Threshold</label><input id="monThreshold" type="number" value="0.7"></div>
+              <div class="field"><button id="monWatch" class="btn">Watch</button></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Alerts</h3>
+            <div class="tw"><table><thead><tr><th>ID</th><th>Entity</th><th>Metric</th><th>Value</th><th>Status</th></tr></thead><tbody id="monAlertBody"></tbody></table></div>
+          </div>
+        </section>
+
       </div>
     </div>
   </div>
@@ -372,12 +493,16 @@
   async function post(u,b){ try{ const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); return await r.json(); }catch{ return null; } }
 
   function showView(name){
-    $$('#view-orders,#view-rider,#view-tracking,#view-intake').forEach(el=>el.classList.toggle('active',el.id==='view-'+name));
+    $$('#view-orders,#view-rider,#view-tracking,#view-intake,#view-osint,#view-explain,#view-privacy,#view-monitoring').forEach(el=>el.classList.toggle('active',el.id==='view-'+name));
     $$('.side .nav').forEach(n=>n.classList.toggle('active',n.dataset.view===name));
-    const map={orders:['Orders','Order management and dispatch.'],rider:['Rider','Rider controls and active queue.'],tracking:['Tracking','Customer live tracking + WhatsApp updates.'],intake:['Intake','Pixel + behavioral event intake.']};
+    const map={orders:['Orders','Order management and dispatch.'],rider:['Rider','Rider controls and active queue.'],tracking:['Tracking','Customer live tracking + WhatsApp updates.'],intake:['Intake','Pixel + behavioral event intake.'],osint:['OSINT','WISMO OSINT sources, fraud, onboarding.'],explain:['Explain','Prediction evidence and reasoning traces.'],privacy:['Privacy','Fusion query privacy gate and domain registry.'],monitoring:['Alerts','Continuous monitoring watch list and alerts.']};
     $('#viewTitle').textContent=map[name][0]; $('#alertText').textContent=map[name][1];
     if(name==='rider') renderRiderView();
     if(name==='tracking') renderTrackingView();
+    if(name==='osint') renderOSINT();
+    if(name==='explain') renderExplain();
+    if(name==='privacy') renderPrivacy();
+    if(name==='monitoring') renderMonitoring();
   }
   function switchOrdersPanel(name){
     const p={orders:$('#panel-orders'),routes:$('#panel-routes'),merchants:$('#panel-merchants')};
@@ -503,8 +628,101 @@
     $('#waReply').textContent=order.customer?`${order.customer} — Asante! Nitatazama.`:'Awaiting customer reply.';
     $('#waReplyTime').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
   }
+  function renderOSINT(){
+    const sources=[
+      {name:'geocoding_address_validation',vertical:'fraud',status:'ready',last:'now'},
+      {name:'phone_validation',vertical:'fraud',status:'ready',last:'now'},
+      {name:'traffic_data',vertical:'safety',status:'ready',last:'2m ago'},
+      {name:'weather_data',vertical:'safety',status:'ready',last:'5m ago'},
+      {name:'crime_incident_data',vertical:'safety',status:'ready',last:'12m ago'},
+      {name:'brs_ke_ecitizen_onboarding',vertical:'onboarding',status:'ready',last:'1m ago'},
+      {name:'ntsa_verification',vertical:'onboarding',status:'ready',last:'3m ago'},
+      {name:'competitor_pricing',vertical:'market_intel',status:'ready',last:'10m ago'},
+      {name:'competitor_jobs',vertical:'market_intel',status:'ready',last:'18m ago'},
+    ];
+    const tb=$('#osintSourceBody'); if(tb) tb.innerHTML=sources.map(s=>`<tr><td style="font-weight:700">${s.name}</td><td><span class="badge b-teal">${s.vertical}</span></td><td><span class="badge b-green">${s.status}</span></td><td style="color:var(--muted);font-size:11px">${s.last}</td></tr>`).join('');
+    const signals=[
+      {id:'SIG-001',type:'fraud',entity:'Distributor X',confidence:0.92,time:'12m ago'},
+      {id:'SIG-002',type:'safety',entity:'Zone 9q8yy',confidence:0.78,time:'18m ago'},
+      {id:'SIG-003',type:'onboarding',entity:'Biz C.12345',confidence:0.85,time:'24m ago'},
+    ];
+    const stb=$('#osintSignalBody'); if(stb) stb.innerHTML=signals.map(s=>`<tr><td style="font-family:var(--mono);font-size:10px;color:var(--muted-2)">${s.id}</td><td><span class="badge b-blue">${s.type}</span></td><td style="font-weight:600">${s.entity}</td><td style="color:var(--teal-lt);font-weight:700">${Math.round(s.confidence*100)}%</td><td style="color:var(--muted);font-size:11px">${s.time}</td></tr>`).join('');
+    $('#osintSignals').textContent=signals.length;
+    $('#osintFraud').textContent=signals.filter(s=>s.type==='fraud').length;
+    $('#osintOnboard').textContent=signals.filter(s=>s.type==='onboarding').length;
+  }
+  function renderExplain(){
+    const pid=$('#explainPredictionId').value||'PRED-001';
+    const evidence=[
+      {signal:'SIG-001',source:'geocoding_address_validation',admiralty:'A1',credibility:0.92,excerpt:'Address risk elevated in Westlands corridor.'},
+      {signal:'SIG-002',source:'traffic_data',admiralty:'B2',credibility:0.78,excerpt:'Route congestion index 0.84.'},
+    ];
+    const tb=$('#explainBody'); if(tb) tb.innerHTML=evidence.map(e=>`<tr><td style="font-family:var(--mono);font-size:10px;color:var(--muted-2)">${e.signal}</td><td style="font-weight:600">${e.source}</td><td><span class="badge b-teal">${e.admiralty}</span></td><td style="color:var(--teal-lt);font-weight:700">${Math.round(e.credibility*100)}%</td></tr>`).join('');
+    $('#explainTrace').textContent=`• ${pid} asserted by persona:logistics_ops\n• Contradicted by persona:risk_analyst on route risk.\n• Confidence reduced from 0.84 to 0.71.`;
+    $('#explainDissent').textContent='• persona:risk_analyst: "Congestion data is 4h old; route may have cleared."';
+    $('#explainCard').style.display='block';
+  }
+  function renderPrivacy(){
+    const domains=[{name:'fmcg_distributor',sensitivity:'medium',fusion:'Yes',partners:'standard'},{name:'logistics',sensitivity:'medium',fusion:'Yes',partners:'standard'},{name:'energy_grid',sensitivity:'low-medium',fusion:'Yes',partners:'default'},{name:'political',sensitivity:'high',fusion:'Restricted',partners:'aggregate-only'},{name:'defence_intelligence',sensitivity:'compartmented',fusion:'No',partners:'none'}];
+    const tb=$('#privacyDomainBody'); if(tb) tb.innerHTML=domains.map(d=>`<tr><td style="font-weight:700">${d.name}</td><td><span class="badge ${d.sensitivity==='medium'?'b-blue':d.sensitivity==='high'?'b-red':'b-gray'}">${d.sensitivity}</span></td><td>${d.fusion}</td><td style="color:var(--muted);font-size:11px">${d.partners}</td></tr>`).join('');
+  }
+  function renderMonitoring(){
+    const watches=[{id:'W-1',entity:'ENT-001',metric:'distress_score',threshold:0.7,status:'active'},{id:'W-2',entity:'ENT-003',metric:'fraud_risk',threshold:0.8,status:'paused'}];
+    const wtb=$('#monWatchCount'); if(wtb) wtb.textContent=watches.length;
+    const alerts=[{id:'A-1',entity:'ENT-001',metric:'distress_score',value:0.82,status:'unacknowledged'},{id:'A-2',entity:'ENT-009',metric:'stockout_prob',value:0.91,status:'unacknowledged'}];
+    const atb=$('#monAlertBody'); if(atb) atb.innerHTML=alerts.map(a=>`<tr><td style="font-family:var(--mono);font-size:10px;color:var(--muted-2)">${a.id}</td><td style="font-weight:600">${a.entity}</td><td>${a.metric}</td><td style="color:var(--red);font-weight:700">${a.value}</td><td><span class="badge b-red">${a.status}</span></td></tr>`).join('');
+    const ac=$('#monAlertCount'); if(ac) ac.textContent=alerts.length;
+  }
+
+  const DEMO_USERS = {
+    'merchant@wismo.ke': { password:'merchant123', role:'merchant', name:'Zawadi Fashions' },
+    'rider@wismo.ke': { password:'rider123', role:'rider', name:'John Kimani' },
+    'admin@wismo.ke': { password:'admin123', role:'admin', name:'Demo Admin' },
+  };
+  const ROLE_VIEWS = {
+    merchant: ['orders','rider','tracking','intake','osint','explain','privacy','monitoring'],
+    rider: ['rider','tracking'],
+    admin: ['orders','rider','tracking','intake','osint','explain','privacy','monitoring'],
+  };
+  function applyRole(role){
+    window.__wismoRole = role;
+    const allowed = ROLE_VIEWS[role] || [];
+    $$('.side .nav').forEach(n=>{
+      const view = n.dataset.view;
+      n.style.display = allowed.includes(view) ? '' : 'none';
+      if(!allowed.includes(view)) n.classList.remove('active');
+    });
+    const accountName = DEMO_USERS[Object.keys(DEMO_USERS).find(k=>DEMO_USERS[k].role===role)]?.name || 'Demo';
+    $('.side .hd').textContent = accountName;
+    if(!allowed.includes('orders')) showView(allowed[0] || 'orders');
+  }
+  function loginSuccess(user){
+    $('#loginOverlay').classList.add('hidden');
+    $('#loginError').textContent = '';
+    applyRole(user.role);
+  }
+  $('#loginBtn').addEventListener('click',()=>{
+    const u = $('#loginUser').value.trim();
+    const p = $('#loginPass').value;
+    const rec = DEMO_USERS[u];
+    if(!rec || rec.password !== p){ $('#loginError').textContent = 'Invalid demo credentials.'; return; }
+    loginSuccess({ role: rec.role });
+  });
+  $('#loginDemo').addEventListener('click',()=>{
+    const rec = DEMO_USERS['merchant@wismo.ke'];
+    $('#loginUser').value = 'merchant@wismo.ke';
+    $('#loginPass').value = rec.password;
+    loginSuccess({ role: rec.role });
+  });
+  $$('.side .nav').forEach(n=>n.addEventListener('click',()=>{
+    const view = n.dataset.view;
+    const allowed = ROLE_VIEWS[window.__wismoRole || 'merchant'] || [];
+    if(!allowed.includes(view)){ toast('Not available for this demo role'); return; }
+    showView(view);
+  }));
 
   (async function init(){
+    if(!window.__wismoRole){ $('#loginOverlay').classList.remove('hidden'); return; }
     await loadOrders();
     if(state.orders.length) bindTracking(state.orders[0]);
     showView('orders');

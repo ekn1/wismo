@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-density="comfortable">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WISMO · Customer Portal</title>
+<style>
+  :root{
+    --navy:#0B5563; --blue:#0E7490; --teal:#0E7490; --red:#CC092F; --gold:#E8B85D;
+    --bg:#EEF2F4; --card:#FFFFFF; --text:#0F1724; --text2:#697586;
+    --border:#E0E5E9; --muted:#F4F6F8; --rail:#FFFFFF;
+    --ok:#15803D; --ok-bg:#E7F6EC; --warn:#B45309; --warn-bg:#FBEFD9;
+    --run:#0E7490; --run-bg:#E3F0F3; --err:#CC092F; --err-bg:#FCE6EB; --info:#1D4ED8; --info-bg:#E6ECFB;
+    --mono:"SF Mono",ui-monospace,"Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --r:14px; --r-lg:18px; --gap:16px; --pad:18px;
+    --shadow:0 1px 3px rgba(16,23,36,.06),0 6px 18px rgba(16,23,36,.05);
+  }
+  [data-theme="dark"]{
+    --bg:#0A1118; --card:#111C26; --text:#E6EBF2; --text2:#8595A8; --border:#1C2A36;
+    --muted:#0D1722; --rail:#0D1722; --ok:#34D399; --ok-bg:#0F2A20; --warn:#FBBF24; --warn-bg:#2A2110;
+    --run:#5EC6DA; --run-bg:#102830; --err:#F87171; --err-bg:#2A1418; --info:#93C5FD; --info-bg:#10203A;
+    --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 22px rgba(0,0,0,.35); --navy:#3FA8BE; --blue:#5EC6DA;
+  }
+  [data-density="compact"]{ --gap:10px; --pad:13px; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;
+    font-size:14px;line-height:1.45;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--card);border-bottom:1px solid var(--border);z-index:5}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.3px;font-size:16px;color:var(--navy)}
+  .brand .mark{width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:var(--shadow)}
+  .brand .mark img{width:30px;height:30px;display:block}
+  .brand small{font-weight:600;color:var(--text2);font-size:11px;letter-spacing:.4px}
+  .tabs{display:flex;gap:6px;margin-left:18px;background:var(--muted);padding:4px;border-radius:12px}
+  .tab{border:none;background:transparent;color:var(--text2);font:inherit;font-weight:700;font-size:13px;
+    padding:8px 16px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:7px}
+  .tab .ico{font-size:15px}
+  .tab.on{background:var(--card);color:var(--navy);box-shadow:var(--shadow)}
+  .topbar .spacer{flex:1}
+  .who{display:flex;align-items:center;gap:9px;font-weight:700;font-size:13px}
+  .who .av{width:30px;height:30px;border-radius:50%;background:var(--run-bg);color:var(--run);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+  .sim-tag{font-size:10px;font-weight:800;letter-spacing:.6px;color:var(--warn);background:var(--warn-bg);border:1px solid var(--warn);border-radius:6px;padding:3px 7px}
+  .icon-btn{background:var(--muted);border:1px solid var(--border);border-radius:9px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:15px}
+  .icon-btn:hover{border-color:var(--blue)}
+  .body{flex:1;overflow-y:auto;padding:var(--gap);max-width:1180px;margin:0 auto;width:100%}
+  .hero{background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:var(--r-lg);padding:22px 24px;color:#fff;box-shadow:var(--shadow);margin-bottom:var(--gap);position:relative;overflow:hidden}
+  .hero::after{content:'';position:absolute;right:-30px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.09);pointer-events:none}
+  .hero h2{font-size:22px;font-weight:800;letter-spacing:-.3px;margin-bottom:3px}
+  .hero p{font-size:13px;opacity:.92}
+  .hero .pill{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:rgba(255,255,255,.16);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--gap);margin-bottom:var(--gap)}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 16px;box-shadow:var(--shadow)}
+  .kpi .lab{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);font-weight:800}
+  .kpi .val{font-size:26px;font-weight:900;letter-spacing:-.6px;margin-top:6px;font-variant-numeric:tabular-nums}
+  .kpi .sub{font-size:12px;color:var(--text2);margin-top:3px;font-weight:600}
+  .kpi .sub.up{color:var(--ok)} .kpi .sub.dn{color:var(--err)}
+  .sect{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:var(--navy);margin:6px 4px 10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--gap);margin-bottom:var(--gap)}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:var(--pad);display:flex;flex-direction:column;gap:12px}
+  .panel h3{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px}
+  .panel .desc{font-size:12px;color:var(--text2);font-weight:500;margin-top:-4px}
+  /* order list */
+  .order{border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:border-color .15s}
+  .order:hover{border-color:var(--blue)}
+  .order .top{display:flex;align-items:center;gap:10px}
+  .order .id{font-family:var(--mono);font-weight:800;font-size:13px}
+  .order .cust{font-size:12px;color:var(--text2);margin-left:auto;text-align:right}
+  .badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:3px 9px;border-radius:20px}
+  .b-transit{color:var(--run);background:var(--run-bg)} .b-delivered{color:var(--ok);background:var(--ok-bg)}
+  .b-pending{color:var(--warn);background:var(--warn-bg)} .b-problem{color:var(--err);background:var(--err-bg)}
+  .b-info{color:var(--info);background:var(--info-bg)}
+  .track{height:6px;border-radius:6px;background:var(--muted);overflow:hidden}
+  .track i{display:block;height:100%;background:linear-gradient(90deg,var(--navy),var(--blue));border-radius:6px}
+  .steps{display:flex;gap:4px;font-size:10px;color:var(--text2);font-weight:700;justify-content:space-between}
+  .btn{background:var(--blue);color:#fff;border:none;border-radius:12px;padding:11px 14px;font:inherit;font-weight:700;cursor:pointer;font-size:13px;transition:opacity .12s,transform .12s}
+  .btn:active{opacity:.8;transform:scale(.97)}
+  .btn.ghost{background:var(--muted);color:var(--text);border:1px solid var(--border)}
+  .btn.sm{padding:8px 12px;font-size:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row.two{display:grid;grid-template-columns:1fr 1fr}
+  .field{display:flex;flex-direction:column;gap:6px;flex:1}
+  label{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.9px}
+  input,select,textarea{width:100%;background:var(--muted);color:var(--text);border:1px solid var(--border);border-radius:11px;padding:11px 12px;font:inherit;font-size:14px;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);background:var(--card)}
+  .map{height:150px;border-radius:12px;background:
+    radial-gradient(circle at 30% 40%, rgba(14,116,144,.12), transparent 40%),
+    repeating-linear-gradient(0deg, var(--muted) 0 19px, transparent 19px 20px),
+    repeating-linear-gradient(90deg, var(--muted) 0 19px, transparent 19px 20px),
+    linear-gradient(135deg,#dfe7ea,#eef3f5);position:relative;overflow:hidden}
+  .map .pin{position:absolute;width:14px;height:14px;border-radius:50% 50% 50% 0;background:var(--red);transform:rotate(-45deg);box-shadow:0 4px 10px rgba(0,0,0,.2)}
+  .map .pin.rider{background:var(--run)}
+  .map .route{position:absolute;left:18%;top:60%;width:60%;height:2px;background:var(--blue);transform:rotate(-18deg);opacity:.6}
+  .note{font-size:11px;color:var(--text2);font-style:italic}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:11px 18px;border-radius:12px;font-weight:700;font-size:13px;box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;z-index:40}
+  .toast.show{opacity:1}
+  .tweaks{position:fixed;top:54px;right:14px;width:248px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:14px;z-index:20;display:none}
+  .tweaks.open{display:block}
+  .tweaks h3{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:10px}
+  .tw{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:13px;font-weight:600}
+  .seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+  .seg button{background:var(--muted);border:none;padding:5px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--text2)}
+  .seg button.on{background:var(--blue);color:#fff}
+  .switch{width:40px;height:22px;border-radius:20px;background:var(--border);position:relative;cursor:pointer;flex:none}
+  .switch.on{background:var(--ok)}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+  .switch.on::after{left:20px}
+  .banner{font-size:11px;color:var(--text2);padding:7px 18px;background:var(--muted);border-bottom:1px solid var(--border)}
+  @media (max-width:760px){ .tabs{display:none} .who .name{display:none} .row.two{grid-template-columns:1fr} }
+  @media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><span class="mark"><img src="/brand/wismo-logo.svg" alt="WISMO"></span>
+      <div>WISMO<br><small>Customer Portal</small></div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-r="merchant"><span class="ico">🏬</span>Merchant</button>
+      <button class="tab" data-r="rider"><span class="ico">🛵</span>Rider</button>
+      <button class="tab" data-r="client"><span class="ico">📦</span>Client / WISMO</button>
+    </div>
+    <span class="sim-tag">SIM DATA</span>
+    <div class="spacer"></div>
+    <div class="who"><span class="av" id="av">M</span><span class="name" id="whoName">Merchant</span></div>
+    <div class="icon-btn" id="twBtn" title="Tweaks">⚙</div>
+  </div>
+
+  <div class="banner">Customer-facing portal — role-switchable for merchants, riders, and clients. All orders, tracking, and metrics are simulated locally (no live backend). Built on the real WISMO service map: Orders :3001, Geo/Route :3002, Notifications/WhatsApp :3003, Pixel :3007, ARE :3004.</div>
+
+  <div class="body" id="body"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="tweaks" id="tweaks">
+    <h3>Display</h3>
+    <div class="tw">Theme <div class="seg" id="segTheme"><button data-v="light" class="on">Light</button><button data-v="dark">Dark</button></div></div>
+    <div class="tw">Density <div class="seg" id="segDens"><button data-v="comfortable" class="on">Comfort</button><button data-v="compact">Compact</button></div></div>
+    <div class="tw">Reduced motion <div class="switch" id="swMotion"></div></div>
+  </div>
+
+<script>
+// ---- SIM data grounded in real WISMO service map ----
+const ROLES = {
+  merchant:{
+    name:'Northwind Goods', av:'M',
+    kpis:[
+      {lab:'Open Orders',val:'128',sub:'+12 today',cls:'up'},
+      {lab:'In Transit',val:'74',sub:'3 delayed',cls:'dn'},
+      {lab:'Delivered (7d)',val:'942',sub:'+8.4%',cls:'up'},
+      {lab:'Experiences',val:'36',sub:'ARE live',cls:''}
+    ],
+    sect:'Recent orders',
+    orders:[
+      {id:'ORD-5521',cust:'A. Okafor',state:'transit',pct:62},
+      {id:'ORD-5518',cust:'L. Martins',state:'pending',pct:18},
+      {id:'ORD-5509',cust:'R. Singh',state:'delivered',pct:100},
+      {id:'ORD-5502',cust:'T. Brown',state:'problem',pct:85}
+    ],
+    extra:`
+      <div class="panel">
+        <h3>🚀 Create experience (ARE)</h3>
+        <div class="desc">Publish a branded delivery experience to ARE Service :3004.</div>
+        <div class="row two">
+          <div class="field"><label>Experience name</label><input value="Summer Track+"></div>
+          <div class="field"><label>Template</label><select><option>Default</option><option>Premium</option><option>Minimal</option></select></div>
+        </div>
+        <button class="btn" onclick="toast('Experience draft saved — would POST to ARE :3004')">Publish experience</button>
+      </div>
+      <div class="panel">
+        <h3>📣 Notify customers</h3>
+        <div class="desc">Trigger WhatsApp updates via Notification Service :3003.</div>
+        <div class="field"><label>Message</label><textarea>Your order is out for delivery!</textarea></div>
+        <div class="row">
+          <button class="btn" onclick="toast('Would send via Notification :3003 (WhatsApp)')">Send to in-transit</button>
+          <button class="btn ghost" onclick="toast('Would send via Pixel :3007 event')">Log pixel event</button>
+        </div>
+      </div>`
+  },
+  rider:{
+    name:'Sam Rivera', av:'R',
+    kpis:[
+      {lab:'Assigned',val:'9',sub:'today',cls:''},
+      {lab:'Completed',val:'5',sub:'55%',cls:'up'},
+      {lab:'Avg ETA',val:'14m',sub:'-2m',cls:'up'},
+      {lab:'Earnings',val:'$86',sub:'today',cls:''}
+    ],
+    sect:'My deliveries',
+    orders:[
+      {id:'ORD-5521',cust:'A. Okafor · 2.1km',state:'transit',pct:62},
+      {id:'ORD-5519',cust:'J. Lopez · 0.8km',state:'pending',pct:18},
+      {id:'ORD-5507',cust:'K. Nguyễn · 3.4km',state:'delivered',pct:100},
+      {id:'ORD-5503',cust:'P. Cole · 1.2km',state:'problem',pct:85}
+    ],
+    extra:`
+      <div class="panel">
+        <h3>🗺️ Live route</h3>
+        <div class="desc">Geo + Route Service :3002 — next stop highlighted.</div>
+        <div class="map"><div class="route"></div><div class="pin rider" style="left:20%;top:64%"></div><div class="pin" style="left:74%;top:40%"></div></div>
+        <button class="btn" onclick="toast('Would poll Route :3002 for re-optimization')">Optimize route</button>
+      </div>
+      <div class="panel">
+        <h3>✅ Proof of delivery</h3>
+        <div class="desc">Mark delivered — logs to Order :3001 + Pixel :3007.</div>
+        <div class="field"><label>Signature / note</label><input placeholder="Left at door"></div>
+        <button class="btn" onclick="toast('Would PATCH ORD + emit pixel :3007')">Mark delivered</button>
+      </div>`
+  },
+  client:{
+    name:'Jordan P.', av:'C',
+    kpis:[
+      {lab:'My Orders',val:'3',sub:'1 in transit',cls:''},
+      {lab:'Next Delivery',val:'Today',sub:'by 6:40pm',cls:'up'},
+      {lab:'On-time',val:'96%',sub:'carrier avg',cls:'up'},
+      {lab:'Alerts',val:'2',sub:'new',cls:''}
+    ],
+    sect:'Track my orders',
+    orders:[
+      {id:'ORD-5521',cust:'Northwind Goods',state:'transit',pct:62},
+      {id:'ORD-5488',cust:'Northwind Goods',state:'delivered',pct:100},
+      {id:'ORD-5402',cust:'Northwind Goods',state:'delivered',pct:100}
+    ],
+    extra:`
+      <div class="panel">
+        <h3>📍 Live map</h3>
+        <div class="desc">Where is my order? Geo :3002 + Pixel :3007 pings.</div>
+        <div class="map"><div class="route"></div><div class="pin rider" style="left:34%;top:58%"></div><div class="pin" style="left:70%;top:38%"></div></div>
+        <div class="row">
+          <button class="btn" onclick="toast('Would subscribe to live WISMO updates')">Track live</button>
+          <button class="btn ghost" onclick="toast('Would send ETA via Notification :3003')">Get ETA alert</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>🔔 Preferences</h3>
+        <div class="desc">Notification Service :3003 — how you hear about each step.</div>
+        <div class="row two">
+          <div class="field"><label>Channel</label><select><option>WhatsApp</option><option>SMS</option><option>Email</option></select></div>
+          <div class="field"><label>Language</label><select><option>English</option><option>Français</option><option>Español</option></select></div>
+        </div>
+        <button class="btn" onclick="toast('Preferences saved — would PUT Notification :3003')">Save preferences</button>
+      </div>`
+  }
+};
+const STATE_LABEL={transit:'In transit',pending:'Pending',delivered:'Delivered',problem:'Action needed'};
+const STATE_CLASS={transit:'b-transit',pending:'b-pending',delivered:'b-delivered',problem:'b-problem'};
+const STEPS=['Placed','Packed','Transit','Out for delivery','Delivered'];
+
+function render(role){
+  const r=ROLES[role];
+  document.getElementById('av').textContent=r.av;
+  document.getElementById('whoName').textContent=r.name;
+  const kpis=r.kpis.map(k=>`<div class="kpi"><div class="lab">${k.lab}</div>
+    <div class="val">${k.val}</div><div class="sub ${k.cls}">${k.sub}</div></div>`).join('');
+  const orders=r.orders.map(o=>{
+    const stepIdx=Math.max(0,Math.round(o.pct/100*(STEPS.length-1)));
+    const steps=STEPS.map((s,i)=>`<span style="${i<=stepIdx?'color:var(--run);font-weight:800':''}">${s}</span>`).join('');
+    return `<div class="order" onclick="toast('Open ${o.id} — would GET Order :3001')">
+      <div class="top"><span class="id">${o.id}</span><span class="badge ${STATE_CLASS[o.state]}">${STATE_LABEL[o.state]}</span>
+        <span class="cust">${o.cust}</span></div>
+      <div class="track"><i style="width:${o.pct}%"></i></div>
+      <div class="steps">${steps}</div></div>`;
+  }).join('');
+  document.getElementById('body').innerHTML=`
+    <div class="hero"><h2>Hello, ${r.name}</h2>
+      <p>${role==='merchant'?'Manage orders and publish delivery experiences.':role==='rider'?'Your deliveries for today.':'Track your shipments in real time.'}</p>
+      <span class="pill">● Live · powered by WISMO</span></div>
+    <div class="kpis">${kpis}</div>
+    <div class="sect">${r.sect}</div>
+    <div class="grid"><div class="panel" style="grid-column:1/-1">
+      <h3>📋 Orders</h3><div class="desc">Tap any order to drill in.</div>${orders}</div>
+      ${r.extra}</div>`;
+}
+
+// role tabs
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); render(t.dataset.r);
+});
+
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2200);}
+
+// tweaks
+const tweaks=document.getElementById('tweaks');
+document.getElementById('twBtn').onclick=()=>tweaks.classList.toggle('open');
+function seg(id,fn){document.querySelectorAll(`#${id} button`).forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(`#${id} button`).forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(b.dataset.v);});}
+seg('segTheme',v=>{document.documentElement.dataset.theme=v;ls('theme',v);});
+seg('segDens',v=>{document.documentElement.dataset.density=v;ls('density',v);});
+const swm=document.getElementById('swMotion');swm.onclick=()=>{swm.classList.toggle('on');document.documentElement.classList.toggle('rm',swm.classList.contains('on'));};
+function ls(k,v){try{localStorage.setItem('wismo_portal_'+k,v)}catch(e){}}
+try{
+  const t=localStorage.getItem('wismo_portal_theme');if(t){document.documentElement.dataset.theme=t;
+    document.querySelectorAll('#segTheme button').forEach(b=>b.classList.toggle('on',b.dataset.v===t));}
+  const d=localStorage.getItem('wismo_portal_density');if(d){document.documentElement.dataset.density=d;
+    document.querySelectorAll('#segDens button').forEach(b=>b.classList.toggle('on',b.dataset.v===d));}
+}catch(e){}
+
+render('merchant');
+</script>
+</body>
+</html>
