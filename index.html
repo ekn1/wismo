@@ -493,6 +493,7 @@
             <div class="row" style="margin-top:12px">
               <div class="field"><button id="swarmCreate" class="btn primary">Create simulation</button></div>
               <div class="field"><button id="swarmRunAll" class="btn" disabled>Run all rounds</button></div>
+              <div class="field"><button id="swarmDemo" class="btn ghost">Run demo</button></div>
             </div>
             <div id="swarmStatus" style="margin-top:10px;font-size:12px;color:var(--muted);font-family:var(--mono)"></div>
           </div>
@@ -512,6 +513,11 @@
           <div class="card" id="swarmResultCard" style="display:none">
             <h3>Simulation result</h3>
             <div id="swarmResult" style="font-size:12px;color:#c7cad3;line-height:1.6;white-space:pre-wrap;font-family:var(--mono)"></div>
+          </div>
+
+          <div class="card" id="swarmDemoCard" style="display:none">
+            <h3>How it works</h3>
+            <div id="swarmDemo" style="font-size:12px;color:#c7cad3;line-height:1.7;white-space:pre-wrap;font-family:var(--mono)"></div>
           </div>
         </section>
 
@@ -821,6 +827,26 @@
   $('#swarmRunAll').addEventListener('click', swarmRunAll);
   $('#swarmInject').addEventListener('click', swarmInject);
   $('#swarmReport').addEventListener('click', swarmReport);
+  $('#swarmDemo').addEventListener('click', async () => {
+    const card = $('#swarmDemoCard');
+    const el = $('#swarmDemo');
+    if (!card || !el) return;
+    card.style.display = 'block';
+    el.textContent = 'Running demo...';
+    await new Promise(r => setTimeout(r, 400));
+    el.textContent = 'Step 1: Creating simulation...\n- domain: wismo\n- agents: Logistics Agent, Regulator\n- initial_world: {"fuel_price":1.00,"stock_level":100,"route_risk":0.2}';
+    await new Promise(r => setTimeout(r, 800));
+    el.textContent += '\n\nStep 2: Running rounds...\nRound 1\n- Logistics Agent: statement issued\n- Regulator: statement issued\nRound 2\n- same agents, no scenario change';
+    await new Promise(r => setTimeout(r, 800));
+    el.textContent += '\n\nStep 3: Injecting scenario...\n- fuel_price: 1.20 (+20%)\n- route_risk: 0.8 (elevated)';
+    await new Promise(r => setTimeout(r, 600));
+    el.textContent += '\n\nStep 4: Re-running from altered world...\n- Logistics Agent revises route allocation\n- Regulator updates compliance checks';
+    await new Promise(r => setTimeout(r, 800));
+    el.textContent += '\n\nStep 5: Generating report...\n- tools: world_state, simulator_rounds, delphi_forecast\n- report_id: report-demo';
+    await new Promise(r => setTimeout(r, 500));
+    el.textContent += '\n\nDemo complete. Use Create simulation to run against the live API.';
+    toast('Demo finished');
+  });
 
   (async function init(){
     if(!window.__wismoRole){ $('#loginOverlay').classList.remove('hidden'); return; }
