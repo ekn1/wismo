@@ -782,75 +782,120 @@
     let world = {};
     try { world = JSON.parse($('#swarmWorld').value || '{}'); } catch { toast('Invalid world JSON'); return; }
     swarmStatus('Creating simulation...');
+    $('#swarmCreate').disabled = true;
+    await new Promise(r => setTimeout(r, 500));
     const data = await post(`${API.swarm}/api/swarm/simulations`, { name, domain, initial_world: world, agents:[{name:'Logistics Agent',role:'logistics_ops',entity_id:'ENT-1',behavior_priors:['minimize_cost'],risk_appetite:0.6},{name:'Regulator',role:'regulator',entity_id:'ENT-2',behavior_priors:['enforce_compliance'],risk_appetite:0.3}], max_rounds: Number($('#swarmRounds').value||5) });
     if(!data || !data.ok){
-      swarmStatus('Backend unavailable — running in demo mode');
       const simId = 'sim-demo-' + Math.random().toString(36).slice(2,8);
       setSwarmEnabled(simId);
       state.swarm.rounds = 0;
       swarmStatus(`Created ${simId} · agents: Logistics Agent, Regulator · demo mode`);
-      swarmShowResult(`Created: ${simId}\nAgents: Logistics Agent, Regulator\nDomain: ${domain}\nMode: client-side demo\nWorld: ${JSON.stringify(world)}`);
+      swarmShowResult(`[DEMO MODE — backend unavailable]\n\nCreated: ${simId}\nName: ${name}\nDomain: ${domain}\nAgents:\n  - Logistics Agent (role: logistics_ops)\n    entity_id: ENT-1\n    behavior_priors: minimize_cost\n    risk_appetite: 0.6\n  - Regulator (role: regulator)\n    entity_id: ENT-2\n    behavior_priors: enforce_compliance\n    risk_appetite: 0.3\nInitial world:\n${JSON.stringify(world, null, 2)}\n\nSimulation ready. Use Run all rounds to execute.`);
+      $('#swarmCreate').disabled = false;
       return;
     }
     const simId = data.data.simulation_id;
     setSwarmEnabled(simId);
     state.swarm.rounds = 0;
     swarmStatus(`Created ${simId} · agents: ${data.data.agents.join(', ')}`);
-    swarmShowResult(`Created: ${simId}\nAgents: ${data.data.agents.join(', ')}\nDomain: ${domain}`);
+    swarmShowResult(`Created: ${simId}\nAgents: ${data.data.agents.join(', ')}\nDomain: ${domain}\nWorld: ${JSON.stringify(world, null, 2)}`);
+    $('#swarmCreate').disabled = false;
   }
   async function swarmRunAll(){
     const simId = state.swarm.simulationId;
     if(!simId){ toast('Create a simulation first'); return; }
+    $('#swarmRunAll').disabled = true;
     swarmStatus('Running all rounds...');
     const data = await post(`${API.swarm}/api/swarm/simulations/${simId}/run`, {});
     if(!data || !data.ok){
-      const rounds = [];
       const max = Number($('#swarmRounds').value||5);
+      const worldRaw = $('#swarmWorld').value || '{}';
+      let world = {};
+      try { world = JSON.parse(worldRaw); } catch(e){}
+      const fuel = world.fuel_price || 1.00;
+      const stock = world.stock_level || 100;
+      const risk = world.route_risk || 0.2;
+      const lines = [`[DEMO MODE — backend unavailable]\n`, `Running ${max} rounds...`, ``];
       for(let i=1;i<=max;i++){
-        rounds.push({ round_number:i, agent_states:[{agent_id:'agent-a',role:'logistics_ops',confidence:0.72,statement:`Route allocation revised for fuel_price=${($('#swarmWorld').value.match(/fuel_price":([0-9.]+)/)||[])[1]||1}.`},{agent_id:'agent-b',role:'regulator',confidence:0.81,statement:'Compliance check updated for route_risk.'}], world_state_delta:{ round:i, mode:'demo' } });
+        const confA = (0.65 + Math.random() * 0.3).toFixed(2);
+        const confB = (0.70 + Math.random() * 0.25).toFixed(2);
+        lines.push(`Round ${i}:`);
+        lines.push(`  Logistics Agent (confidence: ${confA})`);
+        lines.push(`    → Route allocation revised for fuel_price=${fuel}, stock=${stock}.`);
+        if(i > 1 && risk > 0.5){
+          lines.push(`    → Adjusting route mix to avoid high-risk corridors.`);
+        }
+        lines.push(`  Regulator (confidence: ${confB})`);
+        lines.push(`    → Compliance check updated for route_risk=${risk}. Monitoring thresholds applied.`);
+        lines.push(``);
       }
-      state.swarm.rounds = rounds.length;
-      const summary = rounds.map(r => `Round ${r.round_number}: agents=${JSON.stringify(r.agent_states)} delta=${JSON.stringify(r.world_state_delta)}`).join('\n');
-      swarmShowResult(`Rounds completed: ${rounds.length}\n\n${summary}\n\nMode: client-side fallback`);
-      swarmStatus(`Completed ${rounds.length} rounds · demo mode`);
+      lines.push(`World state delta: fuel_price=${fuel}, stock=${stock}, route_risk=${risk}`);
+      lines.push(`\nMode: client-side fallback\nNext step: Inject scenario or Generate report.`);
+      state.swarm.rounds = max;
+      swarmShowResult(lines.join('\n'));
+      swarmStatus(`Completed ${max} rounds · demo mode`);
+      $('#swarmRunAll').disabled = false;
       return;
     }
     state.swarm.rounds = data.data.rounds.length;
     const summary = data.data.rounds.map(r => `Round ${r.round_number}: agents=${JSON.stringify(r.agent_states)} delta=${JSON.stringify(r.world_state_delta)}`).join('\n');
     swarmShowResult(`Rounds completed: ${data.data.rounds.length}\n\n${summary}`);
     swarmStatus(`Completed ${data.data.rounds.length} rounds`);
+    $('#swarmRunAll').disabled = false;
   }
   async function swarmInject(){
     const simId = state.swarm.simulationId;
     if(!simId){ toast('Create a simulation first'); return; }
     let scenario = {};
     try { scenario = JSON.parse($('#swarmScenario').value || '{}'); } catch { toast('Invalid scenario JSON'); return; }
+    $('#swarmInject').disabled = true;
     swarmStatus('Injecting scenario...');
+    await new Promise(r => setTimeout(r, 500));
     const data = await post(`${API.swarm}/api/swarm/simulations/${simId}/inject`, { scenario });
     if(!data || !data.ok){
+      const before = { fuel_price: 1.00, stock_level: 100, route_risk: 0.2 };
+      const lines = [`[DEMO MODE — backend unavailable]\n`, `Scenario injection:`, `  Before:`, `    fuel_price: ${before.fuel_price}`, `    stock_level: ${before.stock_level}`, `    route_risk: ${before.route_risk}`, ``];
+      for(const [k,v] of Object.entries(scenario)){
+        lines.push(`  ${k}: ${before[k] !== undefined ? before[k] : '—'} → ${v}`);
+      }
+      lines.push(``);
+      lines.push(`Injected at: ${new Date().toLocaleTimeString()}`);
+      lines.push(`Simulation ID: ${simId}`);
+      lines.push(``);
+      lines.push(`Agents will re-align in the next round.`);
+      lines.push(`Use Run all rounds to see updated behavior.`);
+      swarmShowResult(lines.join('\n'));
       swarmStatus('Scenario injected · demo mode');
-      swarmShowResult(`Injected scenario:\n${JSON.stringify(scenario, null, 2)}\n\nNext round run will reflect this change.\nMode: client-side fallback`);
+      $('#swarmInject').disabled = false;
       return;
     }
     swarmStatus('Scenario injected');
     swarmShowResult(`Injected scenario:\n${JSON.stringify(scenario, null, 2)}\n\nNext round run will reflect this change.`);
+    $('#swarmInject').disabled = false;
   }
   async function swarmReport(){
     const simId = state.swarm.simulationId;
     if(!simId){ toast('Create a simulation first'); return; }
+    $('#swarmReport').disabled = true;
     swarmStatus('Generating report...');
+    await new Promise(r => setTimeout(r, 500));
     const data = await post(`${API.swarm}/api/swarm/simulations/${simId}/report`, { title: `Simulation ${simId}`, tools:['world_state','simulator_rounds','delphi_forecast'] });
     if(!data || !data.ok){
       const reportId = 'report-demo-' + Math.random().toString(36).slice(2,8);
-      const lines = [`Report: ${$('#swarmName').value||'simulation'}`, `ID: ${reportId}`, `Summary: world_state; simulator_rounds; delphi_forecast`, '', 'Tools:', '  1. world_state', '  2. simulator_rounds', '  3. delphi_forecast', '', 'Findings:', `  1. world_state: {"note":"client-side fallback","simulation_id":"${simId}"}`, `  2. simulator_rounds: {"rounds":${state.swarm.rounds||0}}`, `  3. delphi_forecast: {"forecast":"Consensus leaning toward constrained supply.","confidence":0.68}`];
+      const worldRaw = $('#swarmWorld').value || '{}';
+      let world = {};
+      try { world = JSON.parse(worldRaw); } catch(e){}
+      const lines = [`[DEMO MODE — backend unavailable]\n`, `Report: ${$('#swarmName').value||'simulation'}`, `ID: ${reportId}`, `Generated: ${new Date().toLocaleString()}`, ``, `Summary:`, `  This simulation stress-tested WISMO delivery operations under`, `  altered fuel/route conditions. Agents re-aligned across`, `  ${state.swarm.rounds||0} rounds.`, ``, `Tools invoked:`, `  1. world_state`, `     → Current world snapshot:`, `       ${JSON.stringify(world).slice(0, 120)}`, `  2. simulator_rounds`, `     → Rounds executed: ${state.swarm.rounds||0}`, `     → Convergence: partial`, `  3. delphi_forecast`, `     → Topic: WISMO operational forecast`, `     → Forecast: Consensus leaning toward constrained supply.`, `     → Confidence: 0.68`, `     → Panel size: 12`, ``, `Findings:`, `  1. Route mix should shift to lower-risk corridors when route_risk exceeds 0.5.`, `  2. Fuel price spike above 1.15 reduces viable delivery windows by ~18%.`, `  3. Stock level below 80 requires buffer allocation from secondary depots.`, ``, `Recommendation:`, `  Re-run with adjusted stock_level and route_risk thresholds.`];
       swarmShowResult(lines.join('\n'));
       swarmStatus(`Report generated: ${reportId} · demo mode`);
+      $('#swarmReport').disabled = false;
       return;
     }
     const report = data.data;
     const lines = [`Report: ${report.title}`, `ID: ${report.report_id}`, `Summary: ${report.summary}`, '', 'Tools:', ...report.tool_calls.map(t => `  - ${t.tool}: ${t.ok ? 'OK' : 'FAIL'} (${t.latency_ms}ms)`), '', 'Findings:', ...report.findings.map((f,i) => `  ${i+1}. ${f.tool}: ${JSON.stringify(f.data).slice(0, 220)}`)];
     swarmShowResult(lines.join('\n'));
     swarmStatus(`Report generated: ${report.report_id}`);
+    $('#swarmReport').disabled = false;
   }
   $('#swarmCreate').addEventListener('click', swarmCreate);
   $('#swarmRunAll').addEventListener('click', swarmRunAll);
