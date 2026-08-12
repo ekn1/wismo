@@ -273,6 +273,9 @@
       <div class="nav" data-view="monitoring">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Alerts
       </div>
+      <div class="nav" data-view="swarm">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></svg>Swarm
+      </div>
       <div class="bottom">● gateway 3000<br>● order 3001 · geo 3002<br>● notify 3003 · pixel 3007<br>● osint · explain · privacy</div>
     </aside>
 
@@ -474,14 +477,52 @@
           </div>
         </section>
 
+        <!-- SWARM -->
+        <section id="view-swarm" class="view">
+          <div class="card">
+            <h3>Run simulation</h3>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Create a multi-agent scenario and run it round-by-round, or stress-test with an injected event.</p>
+            <div class="row">
+              <div class="field"><label>Simulation name</label><input id="swarmName" value="Nairobi fuel shock"></div>
+              <div class="field"><label>Domain</label><select id="swarmDomain"><option>wismo</option><option>scents</option><option>generic</option></select></div>
+              <div class="field"><label>Max rounds</label><input id="swarmRounds" type="number" value="5" min="1" max="20"></div>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <div class="field full"><label>Initial world state</label><input id="swarmWorld" value='{"fuel_price":1.00,"stock_level":100,"route_risk":0.2}'></div>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <div class="field"><button id="swarmCreate" class="btn primary">Create simulation</button></div>
+              <div class="field"><button id="swarmRunAll" class="btn" disabled>Run all rounds</button></div>
+            </div>
+            <div id="swarmStatus" style="margin-top:10px;font-size:12px;color:var(--muted);font-family:var(--mono)"></div>
+          </div>
+
+          <div class="card">
+            <h3>Stress test scenario</h3>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Inject a mid-run event into an active simulation to see how agents re-align.</p>
+            <div class="row">
+              <div class="field full"><label>Scenario injection</label><input id="swarmScenario" value='{"fuel_price":1.20,"route_risk":0.8}'></div>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <div class="field"><button id="swarmInject" class="btn danger" disabled>Inject scenario</button></div>
+              <div class="field"><button id="swarmReport" class="btn ghost" disabled>Generate report</button></div>
+            </div>
+          </div>
+
+          <div class="card" id="swarmResultCard" style="display:none">
+            <h3>Simulation result</h3>
+            <div id="swarmResult" style="font-size:12px;color:#c7cad3;line-height:1.6;white-space:pre-wrap;font-family:var(--mono)"></div>
+          </div>
+        </section>
+
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  const API = { order:'http://localhost:3001', notification:'http://localhost:3003', geo:'http://localhost:3002', pixel:'http://localhost:3007' };
-  const state = { orders:[] };
+  const API = { order:'http://localhost:3001', notification:'http://localhost:3003', geo:'http://localhost:3002', pixel:'http://localhost:3007', swarm:'http://localhost:8080' };
+  const state = { orders:[], swarm:{simulationId:null,rounds:0} };
   const $ = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
   const toast = m => { const t=document.createElement('div'); t.className='toast'; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),1800); };
@@ -495,7 +536,7 @@
   function showView(name){
     $$('#view-orders,#view-rider,#view-tracking,#view-intake,#view-osint,#view-explain,#view-privacy,#view-monitoring').forEach(el=>el.classList.toggle('active',el.id==='view-'+name));
     $$('.side .nav').forEach(n=>n.classList.toggle('active',n.dataset.view===name));
-    const map={orders:['Orders','Order management and dispatch.'],rider:['Rider','Rider controls and active queue.'],tracking:['Tracking','Customer live tracking + WhatsApp updates.'],intake:['Intake','Pixel + behavioral event intake.'],osint:['OSINT','WISMO OSINT sources, fraud, onboarding.'],explain:['Explain','Prediction evidence and reasoning traces.'],privacy:['Privacy','Fusion query privacy gate and domain registry.'],monitoring:['Alerts','Continuous monitoring watch list and alerts.']};
+    const map={orders:['Orders','Order management and dispatch.'],rider:['Rider','Rider controls and active queue.'],tracking:['Tracking','Customer live tracking + WhatsApp updates.'],intake:['Intake','Pixel + behavioral event intake.'],osint:['OSINT','WISMO OSINT sources, fraud, onboarding.'],explain:['Explain','Prediction evidence and reasoning traces.'],privacy:['Privacy','Fusion query privacy gate and domain registry.'],monitoring:['Alerts','Continuous monitoring watch list and alerts.'],swarm:['Swarm','Run simulations and stress-test scenarios.']};
     $('#viewTitle').textContent=map[name][0]; $('#alertText').textContent=map[name][1];
     if(name==='rider') renderRiderView();
     if(name==='tracking') renderTrackingView();
@@ -680,9 +721,9 @@
     'admin@wismo.ke': { password:'admin123', role:'admin', name:'Demo Admin' },
   };
   const ROLE_VIEWS = {
-    merchant: ['orders','rider','tracking','intake','osint','explain','privacy','monitoring'],
+    merchant: ['orders','rider','tracking','intake','osint','explain','privacy','monitoring','swarm'],
     rider: ['rider','tracking'],
-    admin: ['orders','rider','tracking','intake','osint','explain','privacy','monitoring'],
+    admin: ['orders','rider','tracking','intake','osint','explain','privacy','monitoring','swarm'],
   };
   function applyRole(role){
     window.__wismoRole = role;
@@ -720,6 +761,66 @@
     if(!allowed.includes(view)){ toast('Not available for this demo role'); return; }
     showView(view);
   }));
+
+  function swarmStatus(msg){ const el=$('#swarmStatus'); if(el) el.textContent = msg || ''; }
+  function swarmShowResult(text){ const card=$('#swarmResultCard'), el=$('#swarmResult'); if(card && el){ el.textContent = text; card.style.display='block'; } }
+  function setSwarmEnabled(simId){ 
+    $('#swarmRunAll').disabled = !simId; 
+    $('#swarmInject').disabled = !simId; 
+    $('#swarmReport').disabled = !simId; 
+    state.swarm.simulationId = simId; 
+  }
+  async function swarmCreate(){
+    const name = $('#swarmName').value || 'unnamed';
+    const domain = $('#swarmDomain').value || 'generic';
+    let world = {};
+    try { world = JSON.parse($('#swarmWorld').value || '{}'); } catch { toast('Invalid world JSON'); return; }
+    swarmStatus('Creating simulation...');
+    const data = await post(`${API.swarm}/api/swarm/simulations`, { name, domain, initial_world: world, agents:[{name:'Logistics Agent',role:'logistics_ops',entity_id:'ENT-1',behavior_priors:['minimize_cost'],risk_appetite:0.6},{name:'Regulator',role:'regulator',entity_id:'ENT-2',behavior_priors:['enforce_compliance'],risk_appetite:0.3}], max_rounds: Number($('#swarmRounds').value||5) });
+    if(!data || !data.ok){ swarmStatus('Create failed'); return; }
+    const simId = data.data.simulation_id;
+    setSwarmEnabled(simId);
+    state.swarm.rounds = 0;
+    swarmStatus(`Created ${simId} · agents: ${data.data.agents.join(', ')}`);
+    swarmShowResult(`Created: ${simId}\nAgents: ${data.data.agents.join(', ')}\nDomain: ${domain}`);
+  }
+  async function swarmRunAll(){
+    const simId = state.swarm.simulationId;
+    if(!simId){ toast('Create a simulation first'); return; }
+    swarmStatus('Running all rounds...');
+    const data = await post(`${API.swarm}/api/swarm/simulations/${simId}/run`, {});
+    if(!data || !data.ok){ swarmStatus('Run failed'); return; }
+    state.swarm.rounds = data.data.rounds.length;
+    const summary = data.data.rounds.map(r => `Round ${r.round_number}: agents=${JSON.stringify(r.agent_states)} delta=${JSON.stringify(r.world_state_delta)}`).join('\n');
+    swarmShowResult(`Rounds completed: ${data.data.rounds.length}\n\n${summary}`);
+    swarmStatus(`Completed ${data.data.rounds.length} rounds`);
+  }
+  async function swarmInject(){
+    const simId = state.swarm.simulationId;
+    if(!simId){ toast('Create a simulation first'); return; }
+    let scenario = {};
+    try { scenario = JSON.parse($('#swarmScenario').value || '{}'); } catch { toast('Invalid scenario JSON'); return; }
+    swarmStatus('Injecting scenario...');
+    const data = await post(`${API.swarm}/api/swarm/simulations/${simId}/inject`, { scenario });
+    if(!data || !data.ok){ swarmStatus('Inject failed'); return; }
+    swarmStatus('Scenario injected');
+    swarmShowResult(`Injected scenario:\n${JSON.stringify(scenario, null, 2)}\n\nNext round run will reflect this change.`);
+  }
+  async function swarmReport(){
+    const simId = state.swarm.simulationId;
+    if(!simId){ toast('Create a simulation first'); return; }
+    swarmStatus('Generating report...');
+    const data = await post(`${API.swarm}/api/swarm/simulations/${simId}/report`, { title: `Simulation ${simId}`, tools:['world_state','simulator_rounds','delphi_forecast'] });
+    if(!data || !data.ok){ swarmStatus('Report failed'); return; }
+    const report = data.data;
+    const lines = [`Report: ${report.title}`, `ID: ${report.report_id}`, `Summary: ${report.summary}`, '', 'Tools:', ...report.tool_calls.map(t => `  - ${t.tool}: ${t.ok ? 'OK' : 'FAIL'} (${t.latency_ms}ms)`), '', 'Findings:', ...report.findings.map((f,i) => `  ${i+1}. ${f.tool}: ${JSON.stringify(f.data).slice(0, 220)}`)];
+    swarmShowResult(lines.join('\n'));
+    swarmStatus(`Report generated: ${report.report_id}`);
+  }
+  $('#swarmCreate').addEventListener('click', swarmCreate);
+  $('#swarmRunAll').addEventListener('click', swarmRunAll);
+  $('#swarmInject').addEventListener('click', swarmInject);
+  $('#swarmReport').addEventListener('click', swarmReport);
 
   (async function init(){
     if(!window.__wismoRole){ $('#loginOverlay').classList.remove('hidden'); return; }
