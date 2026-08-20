@@ -542,7 +542,7 @@
   async function post(u,b){ try{ const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}); return await r.json(); }catch{ return null; } }
 
   function showView(name){
-    $$('#view-orders,#view-rider,#view-tracking,#view-intake,#view-osint,#view-explain,#view-privacy,#view-monitoring').forEach(el=>el.classList.toggle('active',el.id==='view-'+name));
+    $$('#view-orders,#view-rider,#view-tracking,#view-intake,#view-osint,#view-explain,#view-privacy,#view-monitoring,#view-swarm').forEach(el=>el.classList.toggle('active',el.id==='view-'+name));
     $$('.side .nav').forEach(n=>n.classList.toggle('active',n.dataset.view===name));
     const map={orders:['Orders','Order management and dispatch.'],rider:['Rider','Rider controls and active queue.'],tracking:['Tracking','Customer live tracking + WhatsApp updates.'],intake:['Intake','Pixel + behavioral event intake.'],osint:['OSINT','WISMO OSINT sources, fraud, onboarding.'],explain:['Explain','Prediction evidence and reasoning traces.'],privacy:['Privacy','Fusion query privacy gate and domain registry.'],monitoring:['Alerts','Continuous monitoring watch list and alerts.'],swarm:['Swarm','Run simulations and stress-test scenarios.']};
     $('#viewTitle').textContent=map[name][0]; $('#alertText').textContent=map[name][1];
